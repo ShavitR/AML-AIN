@@ -41,7 +41,6 @@
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     
     <style>
-        /* Critical CSS for initial render */
         body {
             margin: 0;
             padding: 0;
@@ -49,30 +48,14 @@
             background-color: #f9fafb;
             color: #111827;
         }
-        
         #app {
             min-height: 100vh;
-        }
-        
-        /* Simple loading state */
-        .loading-placeholder {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f9fafb;
-            color: #6b7280;
-            font-size: 1rem;
         }
     </style>
 </head>
 <body>
     <!-- Main Application Container -->
-    <div id="app">
-        <div class="loading-placeholder">
-            Loading AML-AIN...
-        </div>
-    </div>
+    <div id="app"></div>
     
     <!-- Scripts -->
     <script src="index.js"></script>
@@ -113,7 +96,6 @@
             
             document.body.appendChild(errorDiv);
             
-            // Remove error message after 10 seconds
             setTimeout(() => {
                 if (errorDiv.parentElement) {
                     errorDiv.remove();
@@ -124,7 +106,6 @@
         window.addEventListener('unhandledrejection', (event) => {
             console.error('Unhandled promise rejection:', event.reason);
             
-            // Show user-friendly error message for promise rejections
             const errorDiv = document.createElement('div');
             errorDiv.style.cssText = `
                 position: fixed;
@@ -155,7 +136,6 @@
             
             document.body.appendChild(errorDiv);
             
-            // Remove error message after 10 seconds
             setTimeout(() => {
                 if (errorDiv.parentElement) {
                     errorDiv.remove();

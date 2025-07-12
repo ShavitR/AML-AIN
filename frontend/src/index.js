@@ -3,9 +3,6 @@
 
 console.log('AML-AIN Frontend Application Starting...');
 
-// Import styles
-import './styles/base.css';
-
 // Main application class
 class AMLApp {
   constructor() {
