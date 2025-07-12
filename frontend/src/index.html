@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AML-AIN - Adaptive Meta-Learning AI Network</title>
+    <meta name="description" content="AML-AIN is a distributed AI system with specialized agents for adaptive meta-learning">
+    <meta name="keywords" content="AI, machine learning, meta-learning, distributed systems, agents">
+    <meta name="author" content="AML-AIN Team">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="base.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="AML-AIN - Adaptive Meta-Learning AI Network">
+    <meta property="og:description" content="A distributed AI system with specialized agents for adaptive meta-learning">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://aml-ain.com">
+    <meta property="og:image" content="/og-image.png">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AML-AIN - Adaptive Meta-Learning AI Network">
+    <meta name="twitter:description" content="A distributed AI system with specialized agents for adaptive meta-learning">
+    <meta name="twitter:image" content="/og-image.png">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#2563eb">
+    
+    <!-- Security Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    
+    <style>
+        /* Critical CSS for initial render */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f9fafb;
+            color: #111827;
+        }
+        
+        #app {
+            min-height: 100vh;
+        }
+        
+        /* Simple loading state */
+        .loading-placeholder {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f9fafb;
+            color: #6b7280;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Application Container -->
+    <div id="app">
+        <div class="loading-placeholder">
+            Loading AML-AIN...
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="index.js"></script>
+    
+    <!-- Error Boundary -->
+    <script>
+        window.addEventListener('error', (event) => {
+            console.error('Global error caught:', event.error);
+            
+            // Show user-friendly error message
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #ef4444;
+                color: white;
+                padding: 16px;
+                border-radius: 8px;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                z-index: 10000;
+                max-width: 400px;
+                font-family: 'Inter', sans-serif;
+            `;
+            errorDiv.innerHTML = `
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <span style="margin-right: 8px;">⚠️</span>
+                    <strong>Application Error</strong>
+                    <button onclick="this.parentElement.parentElement.remove()" 
+                            style="margin-left: auto; background: none; border: none; color: white; cursor: pointer; font-size: 18px;">
+                        ×
+                    </button>
+                </div>
+                <p style="margin: 0; font-size: 14px;">
+                    An unexpected error occurred. Please refresh the page or contact support if the problem persists.
+                </p>
+            `;
+            
+            document.body.appendChild(errorDiv);
+            
+            // Remove error message after 10 seconds
+            setTimeout(() => {
+                if (errorDiv.parentElement) {
+                    errorDiv.remove();
+                }
+            }, 10000);
+        });
+        
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled promise rejection:', event.reason);
+            
+            // Show user-friendly error message for promise rejections
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #f59e0b;
+                color: white;
+                padding: 16px;
+                border-radius: 8px;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                z-index: 10000;
+                max-width: 400px;
+                font-family: 'Inter', sans-serif;
+            `;
+            errorDiv.innerHTML = `
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <span style="margin-right: 8px;">⚠️</span>
+                    <strong>Network Error</strong>
+                    <button onclick="this.parentElement.parentElement.remove()" 
+                            style="margin-left: auto; background: none; border: none; color: white; cursor: pointer; font-size: 18px;">
+                        ×
+                    </button>
+                </div>
+                <p style="margin: 0; font-size: 14px;">
+                    A network request failed. Please check your connection and try again.
+                </p>
+            `;
+            
+            document.body.appendChild(errorDiv);
+            
+            // Remove error message after 10 seconds
+            setTimeout(() => {
+                if (errorDiv.parentElement) {
+                    errorDiv.remove();
+                }
+            }, 10000);
+        });
+    </script>
+</body>
+</html> 
