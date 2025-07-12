@@ -132,8 +132,8 @@ module.exports = {
         '<rootDir>/**/*.(test|spec).(js|jsx|ts|tsx)',
       ],
       testPathIgnorePatterns: [
-        '**/integration/**',
-        '**/e2e/**',
+        '/integration/',
+        '/e2e/',
       ],
     },
     {
