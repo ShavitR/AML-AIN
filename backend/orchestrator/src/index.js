@@ -13,7 +13,6 @@ const orchestrator = require('./orchestrator');
 // Middleware
 app.use(cors());
 app.use(express.json());
-// Serve static files first
 app.use(express.static(path.join(__dirname, '../../../frontend/dist')));
 
 // Mock data for demonstration
@@ -60,116 +59,123 @@ const mockSystemMetrics = {
   pendingMessages: 30
 };
 
+// Mock system logs
+const systemLogs = [
+  { timestamp: new Date().toISOString(), level: 'info', message: 'System initialized successfully' },
+  { timestamp: new Date().toISOString(), level: 'info', message: 'WebSocket connection established' },
+  { timestamp: new Date().toISOString(), level: 'info', message: 'Agent discovery service started' },
+  { timestamp: new Date().toISOString(), level: 'info', message: 'Communication layer active' },
+  { timestamp: new Date().toISOString(), level: 'warn', message: 'High memory usage detected' },
+  { timestamp: new Date().toISOString(), level: 'error', message: 'Agent-3 connection timeout' }
+];
+
 // API Routes
 app.get('/api/health', (req, res) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
 app.get('/api/agents', (req, res) => {
-  // Simulate some variation in the data
-  const agents = mockAgents.map(agent => ({
-    ...agent,
-    lastSeen: `${Math.floor(Math.random() * 5) + 1} minutes ago`,
-    health: Math.random() > 0.8 ? 'unhealthy' : 'healthy'
-  }));
-  
-  res.json({ agents });
+  res.json({ agents: mockAgents });
 });
 
 app.get('/api/metrics', (req, res) => {
-  // Simulate real-time metrics
-  const metrics = {
+  // Update metrics with real-time data
+  const updatedMetrics = {
     ...mockSystemMetrics,
     cpu: Math.floor(Math.random() * 30) + 20,
     memory: Math.floor(Math.random() * 40) + 30,
     messagesPerSecond: Math.floor(Math.random() * 100) + 50
   };
-  
-  res.json(metrics);
+  res.json(updatedMetrics);
 });
 
 app.get('/api/communication/status', (req, res) => {
-  const status = {
-    queues: Math.floor(Math.random() * 10) + 5,
-    connections: Math.floor(Math.random() * 20) + 10,
-    pendingMessages: Math.floor(Math.random() * 50) + 20
-  };
-  
-  res.json(status);
+  res.json({
+    queues: mockSystemMetrics.queues,
+    connections: mockSystemMetrics.connections,
+    pendingMessages: mockSystemMetrics.pendingMessages
+  });
 });
 
+// Agent registration endpoint
 app.post('/api/agents/register', (req, res) => {
-  const { name, type, capabilities } = req.body;
-  
-  if (!name || !type) {
-    return res.status(400).json({ error: 'Name and type are required' });
-  }
-  
-  const newAgent = {
-    id: `agent-${Date.now()}`,
-    name,
-    type,
-    status: 'online',
-    capabilities: capabilities || [],
-    lastSeen: 'just now',
-    health: 'healthy',
-    lifecycleState: 'initializing'
-  };
-  
-  mockAgents.push(newAgent);
-  
-  // Notify WebSocket clients
-  wss.clients.forEach(client => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify({
-        type: 'agent_registered',
-        agent: newAgent
-      }));
+  try {
+    const { name, type, capabilities } = req.body;
+    
+    // Validate required fields
+    if (!name || !type) {
+      return res.status(400).json({ error: 'Name and type are required' });
     }
-  });
-  
-  res.json({ success: true, agent: newAgent });
+    
+    // Create new agent
+    const newAgent = {
+      id: `agent-${Date.now()}`,
+      name,
+      type,
+      status: 'online',
+      capabilities: capabilities ? capabilities.split(',').map(c => c.trim()) : [],
+      lastSeen: 'just now',
+      health: 'healthy',
+      lifecycleState: 'running'
+    };
+    
+    mockAgents.push(newAgent);
+    
+    res.status(201).json({ agent: newAgent, message: 'Agent registered successfully' });
+  } catch (error) {
+    console.error('Agent registration error:', error);
+    res.status(500).json({ error: 'Failed to register agent' });
+  }
 });
 
+// Agent action endpoint
 app.post('/api/agents/:id/action', (req, res) => {
-  const { id } = req.params;
-  const { action } = req.body;
-  
-  const agent = mockAgents.find(a => a.id === id);
-  if (!agent) {
-    return res.status(404).json({ error: 'Agent not found' });
-  }
-  
-  switch (action) {
-    case 'start':
-      agent.status = 'online';
-      agent.health = 'healthy';
-      agent.lifecycleState = 'running';
-      break;
-    case 'stop':
-      agent.status = 'offline';
-      agent.lifecycleState = 'stopped';
-      break;
-    case 'restart':
-      agent.status = 'online';
-      agent.health = 'healthy';
-      agent.lifecycleState = 'running';
-      break;
-    default:
-      return res.status(400).json({ error: 'Invalid action' });
-  }
-  
-  // Notify WebSocket clients
-  wss.clients.forEach(client => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify({
-        type: 'agent_status_update',
-        agent
-      }));
+  try {
+    const { id } = req.params;
+    const { action } = req.body;
+    
+    const agent = mockAgents.find(a => a.id === id);
+    if (!agent) {
+      return res.status(404).json({ error: 'Agent not found' });
     }
-  });
-  
-  res.json({ success: true, agent });
+    
+    // Handle different actions
+    switch (action) {
+      case 'start':
+        agent.status = 'online';
+        agent.health = 'healthy';
+        agent.lifecycleState = 'running';
+        agent.lastSeen = 'just now';
+        break;
+      case 'stop':
+        agent.status = 'offline';
+        agent.lifecycleState = 'stopped';
+        break;
+      case 'restart':
+        agent.status = 'online';
+        agent.health = 'healthy';
+        agent.lifecycleState = 'running';
+        agent.lastSeen = 'just now';
+        break;
+      case 'deregister':
+        const index = mockAgents.findIndex(a => a.id === id);
+        if (index > -1) {
+          mockAgents.splice(index, 1);
+        }
+        break;
+      default:
+        return res.status(400).json({ error: 'Invalid action' });
+    }
+    
+    res.json({ 
+      success: true, 
+      message: `Agent ${action} successful`,
+      agent: action === 'deregister' ? null : agent
+    });
+  } catch (error) {
+    console.error('Agent action error:', error);
+    res.status(500).json({ error: 'Failed to perform agent action' });
+  }
 });
 
 // API: Submit a new job
@@ -186,14 +192,113 @@ app.post('/api/orchestration/jobs', (req, res) => {
 
 // API: Get job status
 app.get('/api/orchestration/jobs/:jobId', (req, res) => {
-  const job = orchestrator.jobs?.find(j => j.id === req.params.jobId);
-  if (!job) return res.status(404).json({ error: 'Job not found' });
+  const job = orchestrator.jobs.find(j => j.id === req.params.jobId);
+  if (!job) {
+    return res.status(404).json({ error: 'Job not found' });
+  }
   res.json({ job });
+});
+
+// API: Get all jobs
+app.get('/api/orchestration/jobs', (req, res) => {
+  res.json({ jobs: orchestrator.jobs });
 });
 
 // API: Get task queue
 app.get('/api/orchestration/tasks', (req, res) => {
-  res.json({ tasks: orchestrator.tasks || [] });
+  res.json({ tasks: orchestrator.tasks });
+});
+
+// API: Get system logs
+app.get('/api/logs', (req, res) => {
+  const { level, limit = 100 } = req.query;
+  
+  let filteredLogs = systemLogs;
+  
+  // Filter by level if specified
+  if (level && level !== '') {
+    filteredLogs = systemLogs.filter(log => log.level === level);
+  }
+  
+  // Limit results
+  filteredLogs = filteredLogs.slice(-limit);
+  
+  res.json({ logs: filteredLogs });
+});
+
+// API: Add system log
+app.post('/api/logs', (req, res) => {
+  try {
+    const { level, message } = req.body;
+    
+    if (!level || !message) {
+      return res.status(400).json({ error: 'Level and message are required' });
+    }
+    
+    const newLog = {
+      timestamp: new Date().toISOString(),
+      level,
+      message
+    };
+    
+    systemLogs.push(newLog);
+    
+    // Keep only last 1000 logs
+    if (systemLogs.length > 1000) {
+      systemLogs.splice(0, systemLogs.length - 1000);
+    }
+    
+    res.status(201).json({ log: newLog });
+  } catch (error) {
+    console.error('Log creation error:', error);
+    res.status(500).json({ error: 'Failed to create log entry' });
+  }
+});
+
+// API: Clear system logs
+app.delete('/api/logs', (req, res) => {
+  systemLogs.length = 0;
+  res.json({ message: 'Logs cleared successfully' });
+});
+
+// API: Download logs
+app.get('/api/logs/download', (req, res) => {
+  const logText = systemLogs
+    .map(log => `[${log.timestamp}] ${log.level.toUpperCase()}: ${log.message}`)
+    .join('\n');
+  
+  res.setHeader('Content-Type', 'text/plain');
+  res.setHeader('Content-Disposition', 'attachment; filename="system-logs.txt"');
+  res.send(logText);
+});
+
+// API: Get system configuration
+app.get('/api/config', (req, res) => {
+  res.json({
+    apiUrl: 'http://localhost:3001',
+    wsUrl: 'ws://localhost:3001',
+    debug: true,
+    version: '1.0.0',
+    environment: 'development'
+  });
+});
+
+// API: Update system configuration
+app.put('/api/config', (req, res) => {
+  try {
+    const { apiUrl, wsUrl, debug } = req.body;
+    
+    // Update configuration (in a real app, this would be persisted)
+    console.log('Configuration updated:', { apiUrl, wsUrl, debug });
+    
+    res.json({ 
+      message: 'Configuration updated successfully',
+      config: { apiUrl, wsUrl, debug }
+    });
+  } catch (error) {
+    console.error('Config update error:', error);
+    res.status(500).json({ error: 'Failed to update configuration' });
+  }
 });
 
 // WebSocket handling
@@ -228,6 +333,22 @@ wss.on('connection', (ws) => {
             }
           }));
           break;
+        case 'request_agents':
+          ws.send(JSON.stringify({
+            type: 'agent_update',
+            agents: mockAgents
+          }));
+          break;
+        case 'request_communication':
+          ws.send(JSON.stringify({
+            type: 'communication_update',
+            status: {
+              queues: mockSystemMetrics.queues,
+              connections: mockSystemMetrics.connections,
+              pendingMessages: mockSystemMetrics.pendingMessages
+            }
+          }));
+          break;
       }
     } catch (error) {
       console.error('Error parsing message:', error);
@@ -239,12 +360,12 @@ wss.on('connection', (ws) => {
   });
 });
 
-// Periodic updates
+// Periodic updates to connected clients
 setInterval(() => {
-  wss.clients.forEach(client => {
+  wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(JSON.stringify({
-        type: 'system_metrics_update',
+        type: 'metrics_update',
         metrics: {
           ...mockSystemMetrics,
           cpu: Math.floor(Math.random() * 30) + 20,
@@ -256,39 +377,23 @@ setInterval(() => {
   });
 }, 30000); // Update every 30 seconds
 
-// Only serve index.html for non-file, non-API requests (SPA routing)
+// Serve the frontend application
 app.get('*', (req, res, next) => {
+  // Only serve index.html for non-file, non-API requests (SPA routing)
   if (req.path.startsWith('/api') || req.path.startsWith('/ws')) {
     return next(); // Don't serve index.html for API or WebSocket routes
   }
-  // If the request does not have a file extension, serve index.html
-  if (!path.extname(req.path)) {
-    res.sendFile(path.join(__dirname, '../../../frontend/dist/index.html'));
-  } else {
-    next();
-  }
+  
+  res.sendFile(path.join(__dirname, '../../../frontend/dist/index.html'));
 });
 
 const PORT = process.env.PORT || 3001;
 
 server.listen(PORT, () => {
-  console.log(`🚀 AML-AIN Orchestrator running on port ${PORT}`);
-  console.log(`📊 Dashboard available at http://localhost:${PORT}`);
-  console.log(`🔌 WebSocket server ready for real-time updates`);
+  console.log(`🚀 AML-AIN Backend Server running on port ${PORT}`);
   console.log(`📡 API endpoints available at http://localhost:${PORT}/api`);
+  console.log(`📊 Dashboard available at http://localhost:${PORT}`);
+  console.log(`🔌 WebSocket server running on ws://localhost:${PORT}`);
 });
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    console.log('Process terminated');
-  });
-});
-
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
-  server.close(() => {
-    console.log('Process terminated');
-  });
-}); 
+module.exports = app; 

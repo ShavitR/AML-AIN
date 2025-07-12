@@ -200,7 +200,7 @@
 - [x] Add code samples and SDKs for API consumers
 - [x] Document troubleshooting and FAQ
 
-### 1.5 User-Facing & Visual Aspects 🔄 IN PROGRESS
+### 1.5 User-Facing & Visual Aspects ✅ COMPLETED
 
 #### 1.5.1 General UI/UX Foundation
 - [x] Define and document the core design system (colors, typography, spacing, icons, etc.)
@@ -228,42 +228,42 @@
 - [x] List all registered agents with status, type, capabilities, and last seen
 - [x] Add agent detail view (metadata, health, logs, capabilities, lifecycle state)
 - [x] Implement agent registration form (manual and auto-discovery)
-- [ ] Add agent search, filter, and sort functionality
-- [ ] Provide actions: start, stop, restart, deregister agent (with confirmation modals)
+- [x] Add agent search, filter, and sort functionality
+- [x] Provide actions: start, stop, restart, deregister agent (with confirmation modals)
 - [x] Show agent health and lifecycle status visually (badges, colors, icons)
-- [ ] Display agent logs and recent activity
+- [x] Display agent logs and recent activity
 
 #### 1.5.5 Communication Layer UI
 - [x] Visualize message queues, topics, and routing (list, status, metrics)
 - [x] Show real-time message flow and queue health
 - [x] Display recent messages, errors, and dead-letter queue contents
-- [ ] Add controls to pause/resume queues, purge messages, or inspect payloads
+- [x] Add controls to pause/resume queues, purge messages, or inspect payloads
 - [x] Provide metrics: throughput, latency, dropped messages
 
 #### 1.5.6 Discovery & Registration UI
 - [x] Show discovered agents and their registration status
 - [x] Allow manual and automatic agent registration from the UI
 - [x] Display agent discovery logs and events
-- [ ] Visualize network topology (optional, if feasible)
+- [x] Visualize network topology (optional, if feasible)
 - [x] Provide feedback for registration success/failure
 
 #### 1.5.7 System Monitoring & Logs
-- [ ] Implement system logs viewer with filtering and search
-- [ ] Show recent errors, warnings, and info messages
-- [ ] Add download/export logs feature
-- [ ] Display system resource usage (CPU, memory, disk, network) in real time
-- [ ] Add alerts/notifications for critical system events
+- [x] Implement system logs viewer with filtering and search
+- [x] Show recent errors, warnings, and info messages
+- [x] Add download/export logs feature
+- [x] Display system resource usage (CPU, memory, disk, network) in real time
+- [x] Add alerts/notifications for critical system events
 
 #### 1.5.8 Settings & Configuration
-- [ ] Create settings page for system configuration (API endpoints, timeouts, etc.)
-- [ ] Allow toggling debug mode, dark mode, and other UI preferences
-- [ ] Add form validation and save/cancel actions
-- [ ] Show current configuration and environment info
+- [x] Create settings page for system configuration (API endpoints, timeouts, etc.)
+- [x] Allow toggling debug mode, dark mode, and other UI preferences
+- [x] Add form validation and save/cancel actions
+- [x] Show current configuration and environment info
 
 #### 1.5.9 Authentication & Access Control (if applicable)
-- [ ] Implement login/logout UI (even if stubbed for now)
-- [ ] Show current user info and roles
-- [ ] Add access control feedback (e.g., "You do not have permission")
+- [x] Implement login/logout UI (even if stubbed for now)
+- [x] Show current user info and roles
+- [x] Add access control feedback (e.g., "You do not have permission")
 
 #### 1.5.10 Demo & Test Utilities
 - [x] Add demo data toggles or "simulate activity" buttons for UI testing
@@ -271,15 +271,15 @@
 - [x] Implement test notifications and error banners
 
 #### 1.5.11 Documentation & Help
-- [ ] Add in-app help tooltips and documentation links
-- [ ] Provide a "Getting Started" or onboarding guide
-- [ ] Link to external docs, GitHub, and support
+- [x] Add in-app help tooltips and documentation links
+- [x] Provide a "Getting Started" or onboarding guide
+- [x] Link to external docs, GitHub, and support
 
 #### 1.5.12 Quality, Testing, and Feedback
-- [ ] Write unit and integration tests for all UI components
-- [ ] Add E2E tests for critical user flows (dashboard, agent registration, etc.)
-- [ ] Set up visual regression testing (screenshots, diffs)
-- [ ] Collect user feedback (feedback form or GitHub link)
+- [x] Write unit and integration tests for all UI components
+- [x] Add E2E tests for critical user flows (dashboard, agent registration, etc.)
+- [x] Set up visual regression testing (screenshots, diffs)
+- [x] Collect user feedback (feedback form or GitHub link)
 
 ### 1.6 Knowledge Sharing System 🔄 IN PROGRESS
 
