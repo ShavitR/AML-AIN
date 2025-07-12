@@ -38,23 +38,23 @@
 - [x] Implement message acknowledgment system
 - [x] Create message flow control mechanisms
 
-### 1.3 Agent Discovery & Registration 🔄 IN PROGRESS
+### 1.3 Agent Discovery & Registration ✅ COMPLETED
 
-- [ ] Design agent registration protocol
-- [ ] Implement agent discovery service
-- [ ] Create agent health checking system
-- [ ] Build agent capability registry
-- [ ] Implement agent versioning system
-- [ ] Create agent metadata management
-- [ ] Build agent dependency resolution
-- [ ] Implement agent conflict detection
-- [ ] Create agent lifecycle management
-- [ ] Build agent deployment automation
-- [ ] Implement agent rollback mechanisms
-- [ ] Create agent scaling policies
-- [ ] Build agent resource allocation
-- [ ] Implement agent isolation and security
-- [ ] Create agent monitoring dashboard
+- [x] Design agent registration protocol
+- [x] Implement agent discovery service
+- [x] Create agent health checking system
+- [x] Build agent capability registry
+- [x] Implement agent versioning system
+- [x] Create agent metadata management
+- [x] Build agent dependency resolution
+- [x] Implement agent conflict detection
+- [x] Create agent lifecycle management
+- [x] Build agent deployment automation
+- [x] Implement agent rollback mechanisms
+- [x] Create agent scaling policies
+- [x] Build agent resource allocation
+- [x] Implement agent isolation and security
+- [x] Create agent monitoring dashboard
 
 ### 1.4 Basic Orchestration Framework 🔄 IN PROGRESS
 
@@ -74,7 +74,88 @@
 - [ ] Implement orchestration metrics collection
 - [ ] Create orchestration performance optimization
 
-### 1.5 Knowledge Sharing System 🔄 IN PROGRESS
+### 1.5 User-Facing & Visual Aspects 🔄 IN PROGRESS
+
+#### 1.5.1 General UI/UX Foundation
+- [x] Define and document the core design system (colors, typography, spacing, icons, etc.)
+- [x] Create a reusable component library (buttons, cards, modals, alerts, etc.)
+- [x] Set up global CSS (base.css) and ensure consistent styling across all pages
+- [ ] Implement responsive layout grid and breakpoints for desktop, tablet, and mobile
+- [ ] Add dark mode and accessibility (a11y) support (contrast, keyboard navigation, ARIA labels)
+- [x] Integrate Google Fonts and favicon
+
+#### 1.5.2 Application Shell & Navigation
+- [x] Design and implement the main application shell (header, footer, sidebar/nav)
+- [x] Add logo, project name, and version display
+- [x] Implement navigation menu with links to all major sections (Dashboard, Agents, Communication, Discovery, System, Settings, etc.)
+- [x] Add user profile/account menu (even if placeholder)
+- [x] Show system status indicator (online/offline, health, etc.) in the header
+
+#### 1.5.3 Dashboard & Overview
+- [x] Design dashboard layout with key system metrics and status cards
+- [x] Display real-time system health (overall, backend, communication, agents)
+- [x] Show summary stats: active agents, failed agents, messages/sec, resource usage
+- [x] Add quick links to common actions (register agent, view logs, etc.)
+- [x] Implement loading, error, and empty states for dashboard widgets
+
+#### 1.5.4 Agent Management UI
+- [x] List all registered agents with status, type, capabilities, and last seen
+- [x] Add agent detail view (metadata, health, logs, capabilities, lifecycle state)
+- [x] Implement agent registration form (manual and auto-discovery)
+- [ ] Add agent search, filter, and sort functionality
+- [ ] Provide actions: start, stop, restart, deregister agent (with confirmation modals)
+- [x] Show agent health and lifecycle status visually (badges, colors, icons)
+- [ ] Display agent logs and recent activity
+
+#### 1.5.5 Communication Layer UI
+- [x] Visualize message queues, topics, and routing (list, status, metrics)
+- [x] Show real-time message flow and queue health
+- [x] Display recent messages, errors, and dead-letter queue contents
+- [ ] Add controls to pause/resume queues, purge messages, or inspect payloads
+- [x] Provide metrics: throughput, latency, dropped messages
+
+#### 1.5.6 Discovery & Registration UI
+- [x] Show discovered agents and their registration status
+- [x] Allow manual and automatic agent registration from the UI
+- [x] Display agent discovery logs and events
+- [ ] Visualize network topology (optional, if feasible)
+- [x] Provide feedback for registration success/failure
+
+#### 1.5.7 System Monitoring & Logs
+- [ ] Implement system logs viewer with filtering and search
+- [ ] Show recent errors, warnings, and info messages
+- [ ] Add download/export logs feature
+- [ ] Display system resource usage (CPU, memory, disk, network) in real time
+- [ ] Add alerts/notifications for critical system events
+
+#### 1.5.8 Settings & Configuration
+- [ ] Create settings page for system configuration (API endpoints, timeouts, etc.)
+- [ ] Allow toggling debug mode, dark mode, and other UI preferences
+- [ ] Add form validation and save/cancel actions
+- [ ] Show current configuration and environment info
+
+#### 1.5.9 Authentication & Access Control (if applicable)
+- [ ] Implement login/logout UI (even if stubbed for now)
+- [ ] Show current user info and roles
+- [ ] Add access control feedback (e.g., "You do not have permission")
+
+#### 1.5.10 Demo & Test Utilities
+- [x] Add demo data toggles or "simulate activity" buttons for UI testing
+- [x] Provide a "reset demo" or "clear state" button
+- [x] Implement test notifications and error banners
+
+#### 1.5.11 Documentation & Help
+- [ ] Add in-app help tooltips and documentation links
+- [ ] Provide a "Getting Started" or onboarding guide
+- [ ] Link to external docs, GitHub, and support
+
+#### 1.5.12 Quality, Testing, and Feedback
+- [ ] Write unit and integration tests for all UI components
+- [ ] Add E2E tests for critical user flows (dashboard, agent registration, etc.)
+- [ ] Set up visual regression testing (screenshots, diffs)
+- [ ] Collect user feedback (feedback form or GitHub link)
+
+### 1.6 Knowledge Sharing System 🔄 IN PROGRESS
 
 - [x] Design knowledge graph schema
 - [ ] Implement knowledge graph database
