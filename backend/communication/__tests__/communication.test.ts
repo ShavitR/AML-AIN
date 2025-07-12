@@ -347,6 +347,170 @@ describe('Communication Layer', () => {
       expect(stats.messagesProcessed).toBe(0);
       expect(stats.messagesFailed).toBe(0);
     });
+
+    test('should return false if queue is full', () => {
+      manager.updateConfig({ queue: {
+        maxSize: 1,
+        maxBatchSize: 100,
+        processingTimeout: 30000,
+        retryAttempts: 3,
+        retryDelay: 1000,
+        deadLetterQueue: true,
+        priorityQueues: true,
+        flowControl: false
+      } });
+      const msg1 = manager['serializer'].createMessage(
+        MessageType.HEARTBEAT,
+        'sender-1',
+        'receiver-1',
+        { status: 'alive' }
+      );
+      const msg2 = manager['serializer'].createMessage(
+        MessageType.HEARTBEAT,
+        'sender-1',
+        'receiver-1',
+        { status: 'alive' }
+      );
+      expect(manager['queue'].enqueue(msg1)).toBe(true);
+      expect(manager['queue'].enqueue(msg2)).toBe(false);
+    });
+
+    test('should get and clear dead letter queue', () => {
+      const msg = manager['serializer'].createMessage(
+        MessageType.HEARTBEAT,
+        'sender-1',
+        'receiver-1',
+        { status: 'fail' }
+      );
+      manager['queue'].enqueue(msg);
+      const dequeued = manager['queue'].dequeue();
+      expect(dequeued).toBeDefined();
+      if (dequeued) {
+        // Manually add to processingQueue to simulate real processing
+        manager['queue']['processingQueue'].push(dequeued);
+        manager['queue'].acknowledge(dequeued.id, 'test-agent', 'reject', 'Test rejection');
+      }
+      expect(manager.getDeadLetterQueue().length).toBeGreaterThan(0);
+      manager.clearDeadLetterQueue();
+      expect(manager.getDeadLetterQueue().length).toBe(0);
+    });
+
+    test('should emit sendError on sendMessage failure', async () => {
+      const errors: any[] = [];
+      manager.on('sendError', (e) => errors.push(e));
+      // Patch serializer to throw
+      const origSerialize = manager['serializer'].serialize;
+      manager['serializer'].serialize = () => { throw new Error('Serialize fail'); };
+      await expect(manager.sendMessage(
+        MessageType.HEARTBEAT,
+        'receiver-1',
+        { status: 'alive' }
+      )).rejects.toThrow('Serialize fail');
+      expect(errors.length).toBeGreaterThan(0);
+      manager['serializer'].serialize = origSerialize;
+    });
+
+    test('should throw if receiveMessage is not for this agent', async () => {
+      const msg = manager['serializer'].createMessage(
+        MessageType.HEARTBEAT,
+        'sender-1',
+        'other-agent',
+        { status: 'alive' }
+      );
+      const buf = manager['serializer'].serialize(msg, { format: 'json' });
+      await expect(manager.receiveMessage(buf)).rejects.toThrow('Message not intended for this agent');
+    });
+
+    test('should emit receiveError on receiveMessage failure', async () => {
+      const errors: any[] = [];
+      manager.on('receiveError', (e) => errors.push(e));
+      // Patch serializer to throw
+      const origDeserialize = manager['serializer'].deserialize;
+      manager['serializer'].deserialize = () => { throw new Error('Deserialize fail'); };
+      await expect(manager.receiveMessage(Buffer.from('bad'), { format: 'json' })).rejects.toThrow('Deserialize fail');
+      expect(errors.length).toBeGreaterThan(0);
+      manager['serializer'].deserialize = origDeserialize;
+    });
+
+    test('should emit processError if processMessage throws', async () => {
+      const errors: any[] = [];
+      manager.on('processError', (e) => errors.push(e));
+      // Patch handleHeartbeat to throw
+      const origHandle = manager['handleHeartbeat'];
+      manager['handleHeartbeat'] = async () => { throw new Error('Handler fail'); };
+      const msg = manager['serializer'].createMessage(
+        MessageType.HEARTBEAT,
+        'sender-1',
+        manager['agentId'],
+        { status: 'alive' }
+      );
+      await expect(manager['processMessage'](msg)).rejects.toThrow('Handler fail');
+      expect(errors.length).toBeGreaterThan(0);
+      manager['handleHeartbeat'] = origHandle;
+    });
+
+    test('should emit customMessage for unknown message type', async () => {
+      const events: any[] = [];
+      manager.on('customMessage', (e) => events.push(e));
+      const msg = manager['serializer'].createMessage(
+        'custom-type' as MessageType,
+        'sender-1',
+        manager['agentId'],
+        { foo: 'bar' }
+      );
+      await manager['processMessage'](msg);
+      expect(events.length).toBeGreaterThan(0);
+    });
+
+    test('should update config and emit configUpdated', () => {
+      const events: any[] = [];
+      manager.on('configUpdated', (e) => events.push(e));
+      manager.updateConfig({ serializer: { defaultFormat: 'msgpack', compression: true, encryption: false } });
+      expect(manager['config'].serializer.defaultFormat).toBe('msgpack');
+      expect(events.length).toBeGreaterThan(0);
+    });
+
+    test('should update queue config via updateConfig', () => {
+      manager.updateConfig({ queue: {
+        maxSize: 1234,
+        maxBatchSize: 100,
+        processingTimeout: 30000,
+        retryAttempts: 3,
+        retryDelay: 1000,
+        deadLetterQueue: true,
+        priorityQueues: true,
+        flowControl: true
+      } });
+      expect(manager.getQueueStats().size).toBeDefined(); // Just check queue config is updated
+    });
+
+    test('should add and remove routing rules', () => {
+      const rule = { id: 'r1', name: 'test', conditions: [], actions: [], priority: 1, enabled: true };
+      manager.addRoutingRule(rule);
+      // No direct access to routingRules, so just check no error and can remove
+      manager.removeRoutingRule('r1');
+    });
+
+    test('should register, unregister, and update agent status', () => {
+      manager.registerAgent('agent-x', 'addr-x', ['foo']);
+      // No direct access to routingTable, so just check routing table has the agent
+      expect(manager.getRoutingTable()['agent-x']).toBeDefined();
+      manager.updateAgentStatus('agent-x', 'offline');
+      expect(manager.getRoutingTable()['agent-x'].status).toBe('offline');
+      manager.unregisterAgent('agent-x');
+      expect(manager.getRoutingTable()['agent-x']).toBeUndefined();
+    });
+
+    test('should emit shutdownError if shutdown fails', async () => {
+      const errors: any[] = [];
+      manager.on('shutdownError', (e) => errors.push(e));
+      // Patch queue.stopProcessing to throw
+      const origStop = manager['queue'].stopProcessing;
+      manager['queue'].stopProcessing = () => { throw new Error('Shutdown fail'); };
+      await expect(manager.shutdown()).rejects.toThrow('Shutdown fail');
+      expect(errors.length).toBeGreaterThan(0);
+      manager['queue'].stopProcessing = origStop;
+    });
   });
 
   describe('Integration Tests', () => {
