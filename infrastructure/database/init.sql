@@ -2,9 +2,7 @@
 -- AML-AIN Database Initialization Script
 -- =============================================================================
 
--- Create database if not exists
-CREATE DATABASE IF NOT EXISTS aml_ain;
-
+-- Database is already created by environment variables
 -- Connect to the database
 \c aml_ain;
 
