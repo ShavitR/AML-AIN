@@ -6,7 +6,7 @@ module.exports = {
   moduleFileExtensions: ['js', 'jsx', 'ts', 'tsx', 'json'],
 
   // Test file patterns
-  testMatch: ['**/__tests__/**/*.(js|jsx|ts|tsx)', '**/*.(test|spec).(js|jsx|ts|tsx)'],
+  testMatch: ['<rootDir>/**/__tests__/**/*.(js|jsx|ts|tsx)', '<rootDir>/**/*.(test|spec).(js|jsx|ts|tsx)'],
 
   // Transform files
   transform: {
@@ -128,21 +128,21 @@ module.exports = {
     {
       displayName: 'unit',
       testMatch: [
-        '<rootDir>/backend/.*/__tests__/.*/*.(test|spec).(js|jsx|ts|tsx)',
-        '<rootDir>/backend/.*/*.(test|spec).(js|jsx|ts|tsx)',
+        '<rootDir>/**/__tests__/**/*.(test|spec).(js|jsx|ts|tsx)',
+        '<rootDir>/**/*.(test|spec).(js|jsx|ts|tsx)',
       ],
       testPathIgnorePatterns: [
-        '<rootDir>/backend/.*/integration/.*',
-        '<rootDir>/backend/.*/e2e/.*',
+        '**/integration/**',
+        '**/e2e/**',
       ],
     },
     {
       displayName: 'integration',
-      testMatch: ['<rootDir>/backend/.*/integration/.*/*.(test|spec).(js|jsx|ts|tsx)'],
+      testMatch: ['<rootDir>/**/integration/**/*.(test|spec).(js|jsx|ts|tsx)'],
     },
     {
       displayName: 'e2e',
-      testMatch: ['<rootDir>/backend/.*/e2e/.*/*.(test|spec).(js|jsx|ts|tsx)'],
+      testMatch: ['<rootDir>/**/e2e/**/*.(test|spec).(js|jsx|ts|tsx)'],
     },
   ],
 
