@@ -11,9 +11,9 @@ class AMLApp {
   constructor() {
     this.initialized = false;
     this.config = {
-      apiUrl: process.env.API_URL || 'http://localhost:3001',
-      wsUrl: process.env.WS_URL || 'ws://localhost:3001',
-      debug: process.env.NODE_ENV === 'development'
+      apiUrl: 'http://localhost:3001',
+      wsUrl: 'ws://localhost:3001',
+      debug: true
     };
   }
 
@@ -332,58 +332,45 @@ class AMLApp {
     }
   }
 
-  // Mock API methods for demonstration
+  // Real API methods
   async fetchAgents() {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    return [
-      {
-        id: 'agent-1',
-        name: 'Data Processing Agent',
-        type: 'DataProcessor',
-        status: 'online',
-        capabilities: ['data-processing', 'ml-training'],
-        lastSeen: '2 minutes ago'
-      },
-      {
-        id: 'agent-2',
-        name: 'Communication Agent',
-        type: 'Communicator',
-        status: 'online',
-        capabilities: ['message-routing', 'protocol-handling'],
-        lastSeen: '1 minute ago'
-      },
-      {
-        id: 'agent-3',
-        name: 'Discovery Agent',
-        type: 'Discoverer',
-        status: 'offline',
-        capabilities: ['agent-discovery', 'health-monitoring'],
-        lastSeen: '5 minutes ago'
-      }
-    ];
+    try {
+      const response = await fetch(`${this.config.apiUrl}/api/agents`);
+      const data = await response.json();
+      return data.agents;
+    } catch (error) {
+      console.error('Failed to fetch agents:', error);
+      return [];
+    }
   }
 
   async fetchSystemMetrics() {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    return {
-      cpu: Math.floor(Math.random() * 30) + 20,
-      memory: Math.floor(Math.random() * 40) + 30,
-      activeAgents: Math.floor(Math.random() * 5) + 3,
-      messagesPerSecond: Math.floor(Math.random() * 100) + 50
-    };
+    try {
+      const response = await fetch(`${this.config.apiUrl}/api/metrics`);
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to fetch metrics:', error);
+      return {
+        cpu: 0,
+        memory: 0,
+        activeAgents: 0,
+        messagesPerSecond: 0
+      };
+    }
   }
 
   async fetchCommunicationStatus() {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    return {
-      queues: Math.floor(Math.random() * 10) + 5,
-      connections: Math.floor(Math.random() * 20) + 10,
-      pendingMessages: Math.floor(Math.random() * 50) + 20
-    };
+    try {
+      const response = await fetch(`${this.config.apiUrl}/api/communication/status`);
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to fetch communication status:', error);
+      return {
+        queues: 0,
+        connections: 0,
+        pendingMessages: 0
+      };
+    }
   }
 
   handleWebSocketMessage(data) {
