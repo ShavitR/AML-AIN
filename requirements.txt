@@ -1,9 +1,9 @@
 # Core ML/AI Libraries
-torch==2.1.1
-torchvision==0.16.1
-torchaudio==2.1.1
-tensorflow==2.15.0
-tensorflow-gpu==2.15.0
+torch>=2.6.0
+torchvision>=0.17.0
+torchaudio>=2.6.0
+tensorflow>=2.16.0
+tensorflow-gpu>=2.16.0
 transformers==4.35.2
 diffusers==0.24.0
 accelerate==0.24.1
