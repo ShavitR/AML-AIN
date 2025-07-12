@@ -2,7 +2,10 @@
 
 ## Overview
 
-AML-AIN is a revolutionary distributed AI system that consists of a network of specialized AI agents, each trained to excel at narrow tasks. These agents collaborate, share knowledge, and adapt on the fly to new problems using meta-learning techniques.
+AML-AIN is a revolutionary distributed AI system that consists of a network of
+specialized AI agents, each trained to excel at narrow tasks. These agents
+collaborate, share knowledge, and adapt on the fly to new problems using
+meta-learning techniques.
 
 ## Core Features
 
@@ -107,4 +110,5 @@ MIT License - see LICENSE file for details
 
 - Documentation: [docs/](docs/)
 - Issues: [GitHub Issues](https://github.com/your-org/aml-ain/issues)
-- Discussions: [GitHub Discussions](https://github.com/your-org/aml-ain/discussions) 
+- Discussions:
+  [GitHub Discussions](https://github.com/your-org/aml-ain/discussions)
