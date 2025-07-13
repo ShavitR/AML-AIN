@@ -25,6 +25,9 @@ class AMLApp {
     try {
       console.log('Initializing AML-AIN Frontend...');
       
+      // Setup global error handling first
+      this.setupGlobalErrorHandling();
+      
       // Initialize components
       await this.initializeComponents();
       
@@ -470,14 +473,16 @@ class AMLApp {
         }
       };
       
-      this.ws.onclose = () => {
-        console.log('WebSocket disconnected');
+      this.ws.onclose = (event) => {
+        console.log('WebSocket disconnected:', event.code, event.reason);
         this.updateConnectionStatus('disconnected');
         
-        // Attempt to reconnect
-        setTimeout(() => {
-          this.initializeWebSocket();
-        }, 5000);
+        // Only attempt to reconnect if it wasn't a clean close
+        if (event.code !== 1000) {
+          setTimeout(() => {
+            this.initializeWebSocket();
+          }, 5000);
+        }
       };
       
       this.ws.onerror = (error) => {
@@ -992,6 +997,28 @@ class AMLApp {
   handleError(error) {
     console.error('Application error:', error);
     this.showNotification('An error occurred', 'error');
+    
+    // Log error to external service in production
+    if (this.config.debug) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+
+  /**
+   * Global error handler for unhandled errors
+   */
+  setupGlobalErrorHandling() {
+    window.addEventListener('error', (event) => {
+      this.handleError(event.error || new Error(event.message));
+    });
+
+    window.addEventListener('unhandledrejection', (event) => {
+      this.handleError(new Error(event.reason));
+    });
   }
 
   /**

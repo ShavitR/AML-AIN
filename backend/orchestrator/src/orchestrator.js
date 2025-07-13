@@ -196,11 +196,23 @@ function scheduleTasks(tasks) {
  * @param {string} taskId
  */
 function assignTaskToAgent(agentId, taskId) {
+  if (!agentId || !taskId) {
+    log(`Invalid assignment: agentId=${agentId}, taskId=${taskId}`);
+    return;
+  }
+  
   assignments.push({ agentId, taskId, assignedAt: new Date(), status: 'assigned' });
+  
   // Simulate task running and completion
-  setTimeout(() => {
+  const timeoutId = setTimeout(() => {
     completeTask(taskId, agentId);
   }, 1000 + Math.random() * 2000);
+  
+  // Store timeout ID for potential cleanup
+  const assignment = assignments.find(a => a.taskId === taskId);
+  if (assignment) {
+    assignment.timeoutId = timeoutId;
+  }
 }
 
 /**

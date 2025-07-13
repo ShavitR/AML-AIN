@@ -103,8 +103,17 @@ app.post('/api/agents/register', (req, res) => {
     const { name, type, capabilities } = req.body;
     
     // Validate required fields
-    if (!name || !type) {
-      return res.status(400).json({ error: 'Name and type are required' });
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      return res.status(400).json({ error: 'Name is required and must be a non-empty string' });
+    }
+    
+    if (!type || typeof type !== 'string' || type.trim() === '') {
+      return res.status(400).json({ error: 'Type is required and must be a non-empty string' });
+    }
+    
+    // Validate capabilities if provided
+    if (capabilities && !Array.isArray(capabilities) && typeof capabilities !== 'string') {
+      return res.status(400).json({ error: 'Capabilities must be an array or comma-separated string' });
     }
     
     // Create new agent

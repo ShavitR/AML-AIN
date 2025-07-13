@@ -295,8 +295,17 @@ export class MessageQueue extends EventEmitter {
     this.processing = false;
     if (this.batchProcessor) {
       clearTimeout(this.batchProcessor);
+      this.batchProcessor = undefined;
     }
-    this.batchProcessor = undefined;
+    
+    // Clear all queues to prevent memory leaks
+    this.queues.clear();
+    this.processingQueue = [];
+    this.stats.size = 0;
+    
+    // Reset flow control
+    this.flowControl.currentWindow = 0;
+    this.flowControl.backpressure = false;
   }
 
   /**
