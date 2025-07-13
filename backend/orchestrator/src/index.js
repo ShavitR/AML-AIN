@@ -103,8 +103,17 @@ app.post('/api/agents/register', (req, res) => {
     const { name, type, capabilities } = req.body;
     
     // Validate required fields
-    if (!name || !type) {
-      return res.status(400).json({ error: 'Name and type are required' });
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      return res.status(400).json({ error: 'Name is required and must be a non-empty string' });
+    }
+    
+    if (!type || typeof type !== 'string' || type.trim() === '') {
+      return res.status(400).json({ error: 'Type is required and must be a non-empty string' });
+    }
+    
+    // Validate capabilities if provided
+    if (capabilities && !Array.isArray(capabilities) && typeof capabilities !== 'string') {
+      return res.status(400).json({ error: 'Capabilities must be an array or comma-separated string' });
     }
     
     // Create new agent
@@ -287,6 +296,28 @@ app.get('/api/config', (req, res) => {
 app.put('/api/config', (req, res) => {
   try {
     const { apiUrl, wsUrl, debug } = req.body;
+    
+    // Validate configuration
+    const errors = [];
+    
+    if (apiUrl && typeof apiUrl !== 'string') {
+      errors.push('apiUrl must be a string');
+    }
+    
+    if (wsUrl && typeof wsUrl !== 'string') {
+      errors.push('wsUrl must be a string');
+    }
+    
+    if (debug !== undefined && typeof debug !== 'boolean') {
+      errors.push('debug must be a boolean');
+    }
+    
+    if (errors.length > 0) {
+      return res.status(400).json({ 
+        error: 'Invalid configuration', 
+        details: errors 
+      });
+    }
     
     // Update configuration (in a real app, this would be persisted)
     console.log('Configuration updated:', { apiUrl, wsUrl, debug });

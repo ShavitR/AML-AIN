@@ -1,6 +1,6 @@
 // Message Queue and Flow Control System
 
-import { Message, MessageType, MessagePriority, MessageBatch, MessageAcknowledgment, MessageFlowControl, MessageMetrics, DeadLetterMessage } from './types';
+import { Message, MessagePriority, MessageBatch, MessageAcknowledgment, MessageFlowControl, DeadLetterMessage } from './types';
 import { EventEmitter } from 'events';
 
 export interface QueueConfig {
@@ -32,7 +32,7 @@ export class MessageQueue extends EventEmitter {
   private stats: QueueStats;
   private flowControl: MessageFlowControl;
   private processing: boolean = false;
-  private batchProcessor?: NodeJS.Timeout;
+  private batchProcessor: NodeJS.Timeout | undefined;
 
   constructor(config: Partial<QueueConfig> = {}) {
     super();
@@ -295,8 +295,17 @@ export class MessageQueue extends EventEmitter {
     this.processing = false;
     if (this.batchProcessor) {
       clearTimeout(this.batchProcessor);
+      this.batchProcessor = undefined;
     }
-    this.batchProcessor = undefined;
+    
+    // Clear all queues to prevent memory leaks
+    this.queues.clear();
+    this.processingQueue = [];
+    this.stats.size = 0;
+    
+    // Reset flow control
+    this.flowControl.currentWindow = 0;
+    this.flowControl.backpressure = false;
   }
 
   /**

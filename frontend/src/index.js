@@ -10,7 +10,7 @@ class AMLApp {
     this.config = {
       apiUrl: 'http://localhost:3001',
       wsUrl: 'ws://localhost:3001',
-      debug: true
+      debug: process.env.NODE_ENV === 'development'
     };
     this.currentUser = {
       id: 'user-1',
@@ -24,6 +24,9 @@ class AMLApp {
   async init() {
     try {
       console.log('Initializing AML-AIN Frontend...');
+      
+      // Setup global error handling first
+      this.setupGlobalErrorHandling();
       
       // Initialize components
       await this.initializeComponents();
@@ -67,6 +70,9 @@ class AMLApp {
       return;
     }
 
+    // Sanitize user data before rendering
+    const sanitizedUserName = this.escapeHtml(this.currentUser.name);
+    
     app.innerHTML = `
       <div class="min-h-screen bg-gray-50">
         <!-- Header -->
@@ -83,7 +89,7 @@ class AMLApp {
                   System Online
                 </div>
                 <div class="flex items-center space-x-2">
-                  <span class="text-sm text-gray-600">Welcome, ${this.currentUser.name}</span>
+                  <span class="text-sm text-gray-600">Welcome, ${sanitizedUserName}</span>
                   <button class="btn btn-secondary btn-sm" id="user-menu-btn">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
@@ -305,7 +311,18 @@ class AMLApp {
       // Simulate API call
       const agents = await this.fetchAgents();
       
-      container.innerHTML = agents.map(agent => `
+      // Sanitize agent data to prevent XSS
+      const sanitizedAgents = agents.map(agent => ({
+        ...agent,
+        name: this.escapeHtml(agent.name),
+        type: this.escapeHtml(agent.type),
+        status: this.escapeHtml(agent.status),
+        health: this.escapeHtml(agent.health),
+        lastSeen: this.escapeHtml(agent.lastSeen),
+        capabilities: agent.capabilities.map(cap => this.escapeHtml(cap))
+      }));
+      
+      container.innerHTML = sanitizedAgents.map(agent => `
         <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
           <div class="flex items-center">
             <div class="w-3 h-3 rounded-full ${agent.status === 'online' ? 'bg-green-500' : 'bg-red-500'} mr-3"></div>
@@ -456,14 +473,16 @@ class AMLApp {
         }
       };
       
-      this.ws.onclose = () => {
-        console.log('WebSocket disconnected');
+      this.ws.onclose = (event) => {
+        console.log('WebSocket disconnected:', event.code, event.reason);
         this.updateConnectionStatus('disconnected');
         
-        // Attempt to reconnect
-        setTimeout(() => {
-          this.initializeWebSocket();
-        }, 5000);
+        // Only attempt to reconnect if it wasn't a clean close
+        if (event.code !== 1000) {
+          setTimeout(() => {
+            this.initializeWebSocket();
+          }, 5000);
+        }
       };
       
       this.ws.onerror = (error) => {
@@ -477,12 +496,17 @@ class AMLApp {
   }
 
   setupEventListeners() {
+    // Store event listeners for cleanup
+    this.eventListeners = [];
+    
     // Navigation
     document.querySelectorAll('.nav-item').forEach(item => {
-      item.addEventListener('click', (e) => {
+      const listener = (e) => {
         const view = e.target.dataset.view;
         this.switchView(view);
-      });
+      };
+      item.addEventListener('click', listener);
+      this.eventListeners.push({ element: item, event: 'click', listener });
     });
 
     // Agent management
@@ -674,7 +698,19 @@ class AMLApp {
     const container = document.getElementById('agents-list');
     if (!container) return;
 
-    container.innerHTML = agents.map(agent => `
+    // Sanitize agent data to prevent XSS
+    const sanitizedAgents = agents.map(agent => ({
+      ...agent,
+      id: this.escapeHtml(agent.id),
+      name: this.escapeHtml(agent.name),
+      type: this.escapeHtml(agent.type),
+      status: this.escapeHtml(agent.status),
+      health: this.escapeHtml(agent.health),
+      lastSeen: this.escapeHtml(agent.lastSeen),
+      capabilities: agent.capabilities.map(cap => this.escapeHtml(cap))
+    }));
+
+    container.innerHTML = sanitizedAgents.map(agent => `
       <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg" data-agent-id="${agent.id}">
         <div class="flex items-center">
           <div class="w-3 h-3 rounded-full ${agent.status === 'online' ? 'bg-green-500' : 'bg-red-500'} mr-3"></div>
@@ -750,7 +786,14 @@ class AMLApp {
       { timestamp: new Date().toISOString(), level: 'info', message: 'Communication layer active' }
     ];
 
-    container.innerHTML = logs.map(log => `
+    // Sanitize log data to prevent XSS
+    const sanitizedLogs = logs.map(log => ({
+      ...log,
+      level: this.escapeHtml(log.level),
+      message: this.escapeHtml(log.message)
+    }));
+
+    container.innerHTML = sanitizedLogs.map(log => `
       <div class="log-entry">
         <span class="text-gray-400">[${new Date(log.timestamp).toLocaleTimeString()}]</span>
         <span class="text-${log.level === 'error' ? 'red' : log.level === 'warn' ? 'yellow' : 'green'}-400">${log.level.toUpperCase()}</span>
@@ -891,13 +934,20 @@ class AMLApp {
   }
 
   showUserMenu() {
+    // Sanitize user data to prevent XSS
+    const sanitizedUser = {
+      name: this.escapeHtml(this.currentUser.name),
+      email: this.escapeHtml(this.currentUser.email),
+      role: this.escapeHtml(this.currentUser.role)
+    };
+
     const content = `
       <div class="p-6">
         <h3 class="text-lg font-semibold mb-4">User Profile</h3>
         <div class="mb-4">
-          <p class="text-sm text-gray-600">Name: ${this.currentUser.name}</p>
-          <p class="text-sm text-gray-600">Email: ${this.currentUser.email}</p>
-          <p class="text-sm text-gray-600">Role: ${this.currentUser.role}</p>
+          <p class="text-sm text-gray-600">Name: ${sanitizedUser.name}</p>
+          <p class="text-sm text-gray-600">Email: ${sanitizedUser.email}</p>
+          <p class="text-sm text-gray-600">Role: ${sanitizedUser.role}</p>
         </div>
         <div class="flex justify-end space-x-2">
           <button class="btn btn-secondary" onclick="app.hideModal()">Close</button>
@@ -947,6 +997,69 @@ class AMLApp {
   handleError(error) {
     console.error('Application error:', error);
     this.showNotification('An error occurred', 'error');
+    
+    // Log error to external service in production
+    if (this.config.debug) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+
+  /**
+   * Global error handler for unhandled errors
+   */
+  setupGlobalErrorHandling() {
+    window.addEventListener('error', (event) => {
+      this.handleError(event.error || new Error(event.message));
+    });
+
+    window.addEventListener('unhandledrejection', (event) => {
+      this.handleError(new Error(event.reason));
+    });
+  }
+
+  /**
+   * Escape HTML to prevent XSS attacks
+   * @param {string} text - Text to escape
+   * @returns {string} Escaped text
+   */
+  escapeHtml(text) {
+    if (typeof text !== 'string') return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  /**
+   * Safely set innerHTML with sanitized content
+   * @param {Element} element - Target element
+   * @param {string} content - Content to set
+   */
+  safeSetInnerHTML(element, content) {
+    if (element && content) {
+      element.innerHTML = content;
+    }
+  }
+
+  /**
+   * Clean up event listeners to prevent memory leaks
+   */
+  cleanup() {
+    if (this.eventListeners) {
+      this.eventListeners.forEach(({ element, event, listener }) => {
+        element.removeEventListener(event, listener);
+      });
+      this.eventListeners = [];
+    }
+    
+    // Close WebSocket connection
+    if (this.ws) {
+      this.ws.close();
+      this.ws = null;
+    }
   }
 }
 
