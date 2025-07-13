@@ -288,6 +288,28 @@ app.put('/api/config', (req, res) => {
   try {
     const { apiUrl, wsUrl, debug } = req.body;
     
+    // Validate configuration
+    const errors = [];
+    
+    if (apiUrl && typeof apiUrl !== 'string') {
+      errors.push('apiUrl must be a string');
+    }
+    
+    if (wsUrl && typeof wsUrl !== 'string') {
+      errors.push('wsUrl must be a string');
+    }
+    
+    if (debug !== undefined && typeof debug !== 'boolean') {
+      errors.push('debug must be a boolean');
+    }
+    
+    if (errors.length > 0) {
+      return res.status(400).json({ 
+        error: 'Invalid configuration', 
+        details: errors 
+      });
+    }
+    
     // Update configuration (in a real app, this would be persisted)
     console.log('Configuration updated:', { apiUrl, wsUrl, debug });
     

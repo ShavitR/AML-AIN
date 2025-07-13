@@ -17,7 +17,23 @@ let config = { scheduling: { type: 'FIFO' }, maxRetries: 3 };
  * @returns {Job}
  */
 function submitJob(jobSpec) {
-  // TODO: Validate jobSpec
+  // Validate jobSpec
+  if (!jobSpec) {
+    throw new Error('Job specification is required');
+  }
+  
+  if (!jobSpec.name || typeof jobSpec.name !== 'string' || jobSpec.name.trim() === '') {
+    throw new Error('Job name is required and must be a non-empty string');
+  }
+  
+  if (!jobSpec.owner || typeof jobSpec.owner !== 'string' || jobSpec.owner.trim() === '') {
+    throw new Error('Job owner is required and must be a non-empty string');
+  }
+  
+  if (jobSpec.parameters && typeof jobSpec.parameters !== 'object') {
+    throw new Error('Job parameters must be an object');
+  }
+  
   const job = {
     id: uuidv4(),
     name: jobSpec.name,
@@ -72,9 +88,63 @@ function decomposeJob(job) {
  * @returns {Task[]}
  */
 function resolveDependencies(tasks) {
-  // Simple check for cycles (no real dependencies yet)
-  // TODO: Implement real topological sort and cycle detection
-  return tasks;
+  if (!Array.isArray(tasks) || tasks.length === 0) {
+    return tasks;
+  }
+
+  // Build dependency graph
+  const graph = new Map();
+  const inDegree = new Map();
+  
+  // Initialize graph and in-degree count
+  tasks.forEach(task => {
+    graph.set(task.id, []);
+    inDegree.set(task.id, 0);
+  });
+  
+  // Build edges
+  tasks.forEach(task => {
+    if (task.dependencies && Array.isArray(task.dependencies)) {
+      task.dependencies.forEach(depId => {
+        if (graph.has(depId)) {
+          graph.get(depId).push(task.id);
+          inDegree.set(task.id, inDegree.get(task.id) + 1);
+        }
+      });
+    }
+  });
+  
+  // Topological sort using Kahn's algorithm
+  const queue = [];
+  const result = [];
+  
+  // Add tasks with no dependencies to queue
+  tasks.forEach(task => {
+    if (inDegree.get(task.id) === 0) {
+      queue.push(task.id);
+    }
+  });
+  
+  // Process queue
+  while (queue.length > 0) {
+    const currentId = queue.shift();
+    result.push(tasks.find(t => t.id === currentId));
+    
+    // Reduce in-degree for dependent tasks
+    graph.get(currentId).forEach(depId => {
+      inDegree.set(depId, inDegree.get(depId) - 1);
+      if (inDegree.get(depId) === 0) {
+        queue.push(depId);
+      }
+    });
+  }
+  
+  // Check for cycles
+  if (result.length !== tasks.length) {
+    throw new Error('Circular dependency detected in task graph');
+  }
+  
+  return result;
 }
 
 /**
