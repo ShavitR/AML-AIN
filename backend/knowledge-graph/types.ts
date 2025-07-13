@@ -199,7 +199,7 @@ export enum KnowledgeNodeType {
   AGENT = 'agent',
   TASK = 'task',
   RESULT = 'result',
-  METADATA = 'metadata'
+  METADATA = 'metadata',
 }
 
 export enum RelationshipType {
@@ -222,7 +222,7 @@ export enum RelationshipType {
   PERFORMED_BY = 'performed_by',
   APPLIES_TO = 'applies_to',
   DERIVED_FROM = 'derived_from',
-  VERSION_OF = 'version_of'
+  VERSION_OF = 'version_of',
 }
 
 export enum FilterOperator {
@@ -241,7 +241,7 @@ export enum FilterOperator {
   EXISTS = 'exists',
   NOT_EXISTS = 'not_exists',
   REGEX = 'regex',
-  RANGE = 'range'
+  RANGE = 'range',
 }
 
 export interface KnowledgeGraphConfig {
@@ -302,4 +302,4 @@ export interface BackupConfig {
   location: string;
 }
 
-// Note: KnowledgeGraphDatabase is exported from database.ts 
+// Note: KnowledgeGraphDatabase is exported from database.ts

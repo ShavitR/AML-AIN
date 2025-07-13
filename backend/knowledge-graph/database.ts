@@ -1,16 +1,18 @@
-import {
+import type {
   KnowledgeNode,
   KnowledgeRelationship,
   KnowledgeGraph,
   GraphStatistics,
   KnowledgeNodeType,
-  RelationshipType,
   KnowledgeQuery,
   KnowledgeSearchResult,
   QueryFilter,
-  FilterOperator,
   SortOption,
   KnowledgeGraphConfig
+} from './types';
+import {
+  RelationshipType,
+  FilterOperator
 } from './types';
 
 export class KnowledgeGraphDatabase {
@@ -37,41 +39,43 @@ export class KnowledgeGraphDatabase {
       relationshipTypes: new Map(),
       averageDegree: 0,
       density: 0,
-      connectedComponents: 0
+      connectedComponents: 0,
     };
   }
 
   private initializeIndexes(): void {
-    if (!this.config.indexing.enabled) return;
+    if (!this.config.indexing.enabled) {return;}
 
     // Initialize indexes for configured fields
-    this.config.indexing.indexFields.forEach(field => {
+    this.config.indexing.indexFields.forEach((field) => {
       this.indexes.set(field, new Map());
     });
 
     // Initialize indexes for node types
-    this.config.indexing.indexTypes.forEach(type => {
+    this.config.indexing.indexTypes.forEach((type) => {
       this.indexes.set(`type:${type}`, new Map());
     });
   }
 
   // Node Operations
-  async createNode(node: Omit<KnowledgeNode, 'id' | 'createdAt' | 'updatedAt' | 'version'>): Promise<KnowledgeNode> {
+  async createNode(
+    node: Omit<KnowledgeNode, 'id' | 'createdAt' | 'updatedAt' | 'version'>,
+  ): Promise<KnowledgeNode> {
     const id = this.generateId();
     const now = new Date();
-    
+
     const newNode: KnowledgeNode = {
       ...node,
       id,
       createdAt: now,
       updatedAt: now,
-      version: 1
+      version: 1,
     };
 
     this.nodes.set(id, newNode);
     this.updateIndexes(newNode, 'create');
     this.updateStatistics();
-    
+
     return newNode;
   }
 
@@ -81,39 +85,40 @@ export class KnowledgeGraphDatabase {
 
   async updateNode(id: string, updates: Partial<KnowledgeNode>): Promise<KnowledgeNode | null> {
     const existingNode = this.nodes.get(id);
-    if (!existingNode) return null;
+    if (!existingNode) {return null;}
 
     const updatedNode: KnowledgeNode = {
       ...existingNode,
       ...updates,
       id, // Ensure ID doesn't change
       updatedAt: new Date(),
-      version: existingNode.version + 1
+      version: existingNode.version + 1,
     };
 
     this.nodes.set(id, updatedNode);
     this.updateIndexes(updatedNode, 'update');
     this.updateStatistics();
-    
+
     return updatedNode;
   }
 
   async deleteNode(id: string): Promise<boolean> {
     const node = this.nodes.get(id);
-    if (!node) return false;
+    if (!node) {return false;}
 
     // Remove all relationships involving this node
-    const relationshipsToDelete = Array.from(this.relationships.values())
-      .filter(rel => rel.sourceId === id || rel.targetId === id);
-    
-    relationshipsToDelete.forEach(rel => {
+    const relationshipsToDelete = Array.from(this.relationships.values()).filter(
+      (rel) => rel.sourceId === id || rel.targetId === id
+    );
+
+    relationshipsToDelete.forEach((rel) => {
       this.relationships.delete(rel.id);
     });
 
     this.nodes.delete(id);
     this.updateIndexes(node, 'delete');
     this.updateStatistics();
-    
+
     return true;
   }
 
@@ -134,9 +139,10 @@ export class KnowledgeGraphDatabase {
     // Get relationships if requested
     let relationships: KnowledgeRelationship[] = [];
     if (query.includeRelationships) {
-      const nodeIds = paginatedNodes.map(node => node.id);
-      relationships = Array.from(this.relationships.values())
-        .filter(rel => nodeIds.includes(rel.sourceId) || nodeIds.includes(rel.targetId));
+      const nodeIds = paginatedNodes.map((node) => node.id);
+      relationships = Array.from(this.relationships.values()).filter(
+        (rel) => nodeIds.includes(rel.sourceId) || nodeIds.includes(rel.targetId),
+      );
     }
 
     const executionTime = Date.now() - startTime;
@@ -146,25 +152,27 @@ export class KnowledgeGraphDatabase {
       relationships,
       total,
       query,
-      executionTime
+      executionTime,
     };
   }
 
   // Relationship Operations
-  async createRelationship(relationship: Omit<KnowledgeRelationship, 'id' | 'createdAt' | 'updatedAt'>): Promise<KnowledgeRelationship> {
+  async createRelationship(
+    relationship: Omit<KnowledgeRelationship, 'id' | 'createdAt' | 'updatedAt'>,
+  ): Promise<KnowledgeRelationship> {
     const id = this.generateId();
     const now = new Date();
-    
+
     const newRelationship: KnowledgeRelationship = {
       ...relationship,
       id,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     };
 
     this.relationships.set(id, newRelationship);
     this.updateStatistics();
-    
+
     return newRelationship;
   }
 
@@ -172,35 +180,41 @@ export class KnowledgeGraphDatabase {
     return this.relationships.get(id) || null;
   }
 
-  async updateRelationship(id: string, updates: Partial<KnowledgeRelationship>): Promise<KnowledgeRelationship | null> {
+  async updateRelationship(
+    id: string,
+    updates: Partial<KnowledgeRelationship>,
+  ): Promise<KnowledgeRelationship | null> {
     const existingRelationship = this.relationships.get(id);
-    if (!existingRelationship) return null;
+    if (!existingRelationship) {return null;}
 
     const updatedRelationship: KnowledgeRelationship = {
       ...existingRelationship,
       ...updates,
       id, // Ensure ID doesn't change
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     this.relationships.set(id, updatedRelationship);
     this.updateStatistics();
-    
+
     return updatedRelationship;
   }
 
   async deleteRelationship(id: string): Promise<boolean> {
     const relationship = this.relationships.get(id);
-    if (!relationship) return false;
+    if (!relationship) {return false;}
 
     this.relationships.delete(id);
     this.updateStatistics();
-    
+
     return true;
   }
 
-  async getNodeRelationships(nodeId: string, direction: 'incoming' | 'outgoing' | 'both' = 'both'): Promise<KnowledgeRelationship[]> {
-    return Array.from(this.relationships.values()).filter(rel => {
+  async getNodeRelationships(
+    nodeId: string,
+    direction: 'incoming' | 'outgoing' | 'both' = 'both',
+  ): Promise<KnowledgeRelationship[]> {
+    return Array.from(this.relationships.values()).filter((rel) => {
       switch (direction) {
         case 'incoming':
           return rel.targetId === nodeId;
@@ -213,59 +227,72 @@ export class KnowledgeGraphDatabase {
   }
 
   // Search Operations
-  async search(query: string, options: Partial<KnowledgeQuery> = {}): Promise<KnowledgeSearchResult> {
+  async search(
+    query: string,
+    options: Partial<KnowledgeQuery> = {},
+  ): Promise<KnowledgeSearchResult> {
     const defaultQuery: KnowledgeQuery = {
       filters: [],
       sort: [{ field: 'updatedAt', direction: 'desc' }],
       limit: 50,
       offset: 0,
       includeRelationships: false,
-      includeMetadata: true
+      includeMetadata: true,
     };
 
     const searchQuery = { ...defaultQuery, ...options };
-    
+
     // Add text search filter
     searchQuery.filters.push({
       field: 'content',
       operator: FilterOperator.CONTAINS,
-      value: query
+      value: query,
     });
 
     return this.listNodes(searchQuery);
   }
 
-  async searchByType(type: KnowledgeNodeType, query: Partial<KnowledgeQuery> = {}): Promise<KnowledgeSearchResult> {
+  async searchByType(
+    type: KnowledgeNodeType,
+    query: Partial<KnowledgeQuery> = {},
+  ): Promise<KnowledgeSearchResult> {
     const searchQuery: KnowledgeQuery = {
-      filters: [{
-        field: 'type',
-        operator: FilterOperator.EQUALS,
-        value: type
-      }],
+      filters: [
+        {
+          field: 'type',
+          operator: FilterOperator.EQUALS,
+          value: type,
+        },
+      ],
       sort: [{ field: 'updatedAt', direction: 'desc' }],
       limit: 50,
       offset: 0,
       includeRelationships: false,
       includeMetadata: true,
-      ...query
+      ...query,
     };
 
     return this.listNodes(searchQuery);
   }
 
-  async searchByTag(tag: string, query: Partial<KnowledgeQuery> = {}): Promise<KnowledgeSearchResult> {
+  async searchByTag(
+    tag: string,
+    query: Partial<KnowledgeQuery> = {},
+  ): Promise<KnowledgeSearchResult> {
     const searchQuery: KnowledgeQuery = {
-      filters: [{
-        field: 'tags',
-        operator: FilterOperator.CONTAINS,
-        value: tag
-      }],
+      filters: [
+        {
+          field: 'tags',
+          operator: FilterOperator.CONTAINS,
+          value: tag,
+        },
+      ],
       sort: [{ field: 'updatedAt', direction: 'desc' }],
       limit: 50,
       offset: 0,
       includeRelationships: false,
       includeMetadata: true,
-      ...query
+      ...query,
     };
 
     return this.listNodes(searchQuery);
@@ -276,15 +303,18 @@ export class KnowledgeGraphDatabase {
     return this.statistics;
   }
 
-  async getConnectedNodes(nodeId: string, maxDepth: number = 1): Promise<Map<string, KnowledgeNode>> {
+  async getConnectedNodes(
+    nodeId: string,
+    maxDepth: number = 1,
+  ): Promise<Map<string, KnowledgeNode>> {
     const connectedNodes = new Map<string, KnowledgeNode>();
     const visited = new Set<string>();
     const queue: Array<{ nodeId: string; depth: number }> = [{ nodeId, depth: 0 }];
 
     while (queue.length > 0) {
       const { nodeId: currentId, depth } = queue.shift()!;
-      
-      if (visited.has(currentId) || depth > maxDepth) continue;
+
+      if (visited.has(currentId) || depth > maxDepth) {continue;}
       visited.add(currentId);
 
       const node = this.nodes.get(currentId);
@@ -308,16 +338,18 @@ export class KnowledgeGraphDatabase {
 
   async findShortestPath(sourceId: string, targetId: string): Promise<KnowledgeRelationship[]> {
     const visited = new Set<string>();
-    const queue: Array<{ nodeId: string; path: KnowledgeRelationship[] }> = [{ nodeId: sourceId, path: [] }];
+    const queue: Array<{ nodeId: string; path: KnowledgeRelationship[] }> = [
+      { nodeId: sourceId, path: [] },
+    ];
 
     while (queue.length > 0) {
       const { nodeId, path } = queue.shift()!;
-      
+
       if (nodeId === targetId) {
         return path;
       }
 
-      if (visited.has(nodeId)) continue;
+      if (visited.has(nodeId)) {continue;}
       visited.add(nodeId);
 
       const relationships = await this.getNodeRelationships(nodeId);
@@ -334,12 +366,12 @@ export class KnowledgeGraphDatabase {
 
   // Index Operations
   private updateIndexes(node: KnowledgeNode, operation: 'create' | 'update' | 'delete'): void {
-    if (!this.config.indexing.enabled) return;
+    if (!this.config.indexing.enabled) {return;}
 
-    this.config.indexing.indexFields.forEach(field => {
+    this.config.indexing.indexFields.forEach((field) => {
       const indexKey = field;
       const index = this.indexes.get(indexKey);
-      if (!index) return;
+      if (!index) {return;}
 
       const value = this.getFieldValue(node, field);
       if (value !== undefined) {
@@ -388,8 +420,8 @@ export class KnowledgeGraphDatabase {
 
   // Filter and Sort Operations
   private applyFilters(nodes: KnowledgeNode[], filters: QueryFilter[]): KnowledgeNode[] {
-    return nodes.filter(node => {
-      return filters.every(filter => {
+    return nodes.filter((node) => {
+      return filters.every((filter) => {
         const fieldValue = this.getFieldValue(node, filter.field);
         return this.evaluateFilter(fieldValue, filter);
       });
@@ -480,8 +512,9 @@ export class KnowledgeGraphDatabase {
 
     // Calculate average degree
     const totalDegree = Array.from(this.nodes.keys()).reduce((sum, nodeId) => {
-      const relationships = Array.from(this.relationships.values())
-        .filter(rel => rel.sourceId === nodeId || rel.targetId === nodeId);
+      const relationships = Array.from(this.relationships.values()).filter(
+        (rel) => rel.sourceId === nodeId || rel.targetId === nodeId,
+      );
       return sum + relationships.length;
     }, 0);
     this.statistics.averageDegree = this.nodes.size > 0 ? totalDegree / this.nodes.size : 0;
@@ -510,10 +543,10 @@ export class KnowledgeGraphDatabase {
 
   private dfs(nodeId: string, visited: Set<string>): void {
     visited.add(nodeId);
-    
-    const relationships = Array.from(this.relationships.values())
-      .filter(rel => rel.sourceId === nodeId || rel.targetId === nodeId);
-    
+
+    const relationships = Array.from(this.relationships.values()).filter(
+      (rel) => rel.sourceId === nodeId || rel.targetId === nodeId,
+
     for (const rel of relationships) {
       const nextId = rel.sourceId === nodeId ? rel.targetId : rel.sourceId;
       if (!visited.has(nextId)) {
@@ -540,7 +573,7 @@ export class KnowledgeGraphDatabase {
       nodes: new Map(this.nodes),
       relationships: new Map(this.relationships),
       indexes: new Map(this.indexes),
-      statistics: this.statistics
+      statistics: this.statistics,
     };
   }
 
@@ -550,4 +583,4 @@ export class KnowledgeGraphDatabase {
     this.indexes = new Map(graph.indexes);
     this.statistics = graph.statistics;
   }
-} 
+}

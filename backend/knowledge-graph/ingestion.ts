@@ -1,15 +1,13 @@
+import type { KnowledgeNode, KnowledgeRelationship, KnowledgeIngestionResult } from './types';
 import {
-  KnowledgeNode,
-  KnowledgeRelationship,
-  KnowledgeIngestionResult,
   IngestionError,
   KnowledgeNodeType,
   RelationshipType,
   KnowledgeValidationResult,
-  ValidationError
+  ValidationError,
 } from './types';
-import { KnowledgeGraphDatabase } from './database';
-import { KnowledgeValidator } from './validator';
+import type { KnowledgeGraphDatabase } from './database';
+import type { KnowledgeValidator } from './validator';
 
 export interface IngestionSource {
   type: 'json' | 'csv' | 'xml' | 'rdf' | 'text' | 'api';
@@ -40,7 +38,7 @@ export class KnowledgeIngestionPipeline {
     updateExisting: false,
     batchSize: 100,
     maxErrors: 10,
-    source: 'unknown'
+    source: 'unknown',
   };
 
   constructor(database: KnowledgeGraphDatabase, validator: KnowledgeValidator) {
@@ -48,7 +46,10 @@ export class KnowledgeIngestionPipeline {
     this.validator = validator;
   }
 
-  async ingest(source: IngestionSource, options: Partial<IngestionOptions> = {}): Promise<KnowledgeIngestionResult> {
+  async ingest(
+    source: IngestionSource,
+    options: Partial<IngestionOptions> = {},
+  ): Promise<KnowledgeIngestionResult> {
     const opts = { ...this.defaultOptions, ...options };
     const result: KnowledgeIngestionResult = {
       success: true,
@@ -57,20 +58,22 @@ export class KnowledgeIngestionPipeline {
       relationshipsCreated: 0,
       relationshipsUpdated: 0,
       errors: [],
-      warnings: []
+      warnings: [],
     };
 
     try {
       const parsedData = await this.parseSource(source);
-      
+
       if (opts.validateOnIngestion) {
         const validation = await this.validator.validateIngestionData(parsedData);
         if (!validation.valid) {
-          result.errors.push(...validation.errors.map((error: any) => ({
-            type: 'validation',
-            message: error.message,
-            data: error
-          })));
+          result.errors.push(
+            ...validation.errors.map((error: any) => ({
+              type: 'validation',
+              message: error.message,
+              data: error,
+            })),
+          );
           result.warnings.push(...validation.warnings);
           result.success = false;
         }
@@ -82,27 +85,28 @@ export class KnowledgeIngestionPipeline {
       }
 
       const ingestionResult = await this.processData(parsedData, opts);
-      
+
       result.nodesCreated = ingestionResult.nodesCreated;
       result.nodesUpdated = ingestionResult.nodesUpdated;
       result.relationshipsCreated = ingestionResult.relationshipsCreated;
       result.relationshipsUpdated = ingestionResult.relationshipsUpdated;
       result.errors.push(...ingestionResult.errors);
       result.warnings.push(...ingestionResult.warnings);
-
     } catch (error: any) {
       result.success = false;
       result.errors.push({
         type: 'ingestion',
         message: error instanceof Error ? error.message : 'Unknown ingestion error',
-        data: error
+        data: error,
       });
     }
 
     return result;
   }
 
-  private async parseSource(source: IngestionSource): Promise<{ nodes: any[]; relationships: any[] }> {
+  private async parseSource(
+    source: IngestionSource,
+  ): Promise<{ nodes: any[]; relationships: any[] }> {
     switch (source.type) {
       case 'json':
         return this.parseJSON(source.data);
@@ -128,15 +132,15 @@ export class KnowledgeIngestionPipeline {
 
     if (Array.isArray(data)) {
       return {
-        nodes: data.filter(item => item.type && item.content),
-        relationships: data.filter(item => item.sourceId && item.targetId)
+        nodes: data.filter((item) => item.type && item.content),
+        relationships: data.filter((item) => item.sourceId && item.targetId),
       };
     }
 
     if (data.nodes && data.relationships) {
       return {
         nodes: Array.isArray(data.nodes) ? data.nodes : [],
-        relationships: Array.isArray(data.relationships) ? data.relationships : []
+        relationships: Array.isArray(data.relationships) ? data.relationships : [],
       };
     }
 
@@ -144,7 +148,7 @@ export class KnowledgeIngestionPipeline {
     if (data.type && data.content) {
       return {
         nodes: [data],
-        relationships: []
+        relationships: [],
       };
     }
 
@@ -152,27 +156,29 @@ export class KnowledgeIngestionPipeline {
   }
 
   private async parseCSV(data: string): Promise<{ nodes: any[]; relationships: any[] }> {
-    const lines = data.split('\n').filter(line => line.trim());
+    const lines = data.split('\n').filter((line) => line.trim());
     if (lines.length === 0) {
       return { nodes: [], relationships: [] };
     }
 
-         const headers = lines[0]?.split(',').map(h => h.trim()) || [];
-     const nodes: any[] = [];
-     const relationships: any[] = [];
+    const headers = lines[0]?.split(',').map((h) => h.trim()) || [];
+    const nodes: any[] = [];
+    const relationships: any[] = [];
 
-     for (let i = 1; i < lines.length; i++) {
-       const line = lines[i];
-       if (!line) continue;
-       
-       const values = line.split(',').map(v => v.trim()) || [];
-       const row: any = {};
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line) {
+        continue;
+      }
 
-       headers.forEach((header, index) => {
-         if (header) {
-           row[header] = values[index] || '';
-         }
-       });
+      const values = line.split(',').map((v) => v.trim()) || [];
+      const row: any = {};
+
+      headers.forEach((header, index) => {
+        if (header) {
+          row[header] = values[index] || '';
+        }
+      });
 
       if (row.type && row.content) {
         nodes.push(row);
@@ -194,12 +200,16 @@ export class KnowledgeIngestionPipeline {
 
     for (const match of nodeMatches) {
       const node = this.parseXMLElement(match, 'node');
-      if (node) nodes.push(node);
+      if (node) {
+        nodes.push(node);
+      }
     }
 
     for (const match of relationshipMatches) {
       const relationship = this.parseXMLElement(match, 'relationship');
-      if (relationship) relationships.push(relationship);
+      if (relationship) {
+        relationships.push(relationship);
+      }
     }
 
     return { nodes, relationships };
@@ -207,7 +217,9 @@ export class KnowledgeIngestionPipeline {
 
   private parseXMLElement(xml: string, tag: string): any {
     const contentMatch = xml.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`));
-    if (!contentMatch) return null;
+    if (!contentMatch) {
+      return null;
+    }
 
     const content = contentMatch[1];
     const attributes: any = {};
@@ -232,20 +244,20 @@ export class KnowledgeIngestionPipeline {
     const relationships: any[] = [];
     const subjects = new Map<string, any>();
 
-    const lines = data.split('\n').filter(line => line.trim());
-    
+    const lines = data.split('\n').filter((line) => line.trim());
+
     for (const line of lines) {
       const match = line.match(/<([^>]+)>\s+<([^>]+)>\s+(.+)/);
       if (match) {
         const [, subject, predicate, object] = match;
-        
+
         if (subject && predicate && object) {
           if (!subjects.has(subject)) {
             subjects.set(subject, {
               id: subject,
               type: KnowledgeNodeType.CONCEPT,
               content: subject,
-              metadata: { title: subject }
+              metadata: { title: subject },
             });
           }
 
@@ -262,7 +274,7 @@ export class KnowledgeIngestionPipeline {
               targetId: object.replace(/[<>]/g, ''),
               type: RelationshipType.ASSOCIATED_WITH,
               weight: 1.0,
-              metadata: { description: predicate }
+              metadata: { description: predicate },
             });
           }
         }
@@ -271,7 +283,7 @@ export class KnowledgeIngestionPipeline {
 
     return {
       nodes: Array.from(subjects.values()),
-      relationships
+      relationships,
     };
   }
 
@@ -283,18 +295,18 @@ export class KnowledgeIngestionPipeline {
 
     // Extract potential concepts (capitalized words)
     const conceptMatches = data.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b/g) || [];
-    conceptMatches.forEach(concept => {
+    conceptMatches.forEach((concept) => {
       concepts.add(concept);
     });
 
     // Create nodes for concepts
-    concepts.forEach(concept => {
+    concepts.forEach((concept) => {
       nodes.push({
         type: KnowledgeNodeType.CONCEPT,
         content: concept,
         metadata: {
           title: concept,
-          description: `Concept extracted from text: ${concept}`
+          description: `Concept extracted from text: ${concept}`,
         },
         confidence: 0.5,
         tags: ['extracted', 'text'],
@@ -302,8 +314,8 @@ export class KnowledgeIngestionPipeline {
           owner: 'system',
           permissions: [],
           groups: [],
-          public: true
-        }
+          public: true,
+        },
       });
     });
 
@@ -311,10 +323,10 @@ export class KnowledgeIngestionPipeline {
     const relationshipPatterns = [
       /(\w+)\s+is\s+(\w+)/gi,
       /(\w+)\s+has\s+(\w+)/gi,
-      /(\w+)\s+contains\s+(\w+)/gi
+      /(\w+)\s+contains\s+(\w+)/gi,
     ];
 
-    relationshipPatterns.forEach(pattern => {
+    relationshipPatterns.forEach((pattern) => {
       let match;
       while ((match = pattern.exec(data)) !== null) {
         const [, source, target] = match;
@@ -325,9 +337,9 @@ export class KnowledgeIngestionPipeline {
             type: RelationshipType.ASSOCIATED_WITH,
             weight: 0.5,
             metadata: {
-              description: `Relationship extracted from text`,
-              confidence: 0.3
-            }
+              description: 'Relationship extracted from text',
+              confidence: 0.3,
+            },
           });
         }
       }
@@ -340,8 +352,8 @@ export class KnowledgeIngestionPipeline {
     // Handle API responses - assume they follow a standard format
     if (Array.isArray(data)) {
       return {
-        nodes: data.filter(item => item.type && item.content),
-        relationships: data.filter(item => item.sourceId && item.targetId)
+        nodes: data.filter((item) => item.type && item.content),
+        relationships: data.filter((item) => item.sourceId && item.targetId),
       };
     }
 
@@ -363,7 +375,9 @@ export class KnowledgeIngestionPipeline {
   }
 
   private extractFromObject(obj: any, nodes: any[], relationships: any[]): void {
-    if (typeof obj !== 'object' || obj === null) return;
+    if (typeof obj !== 'object' || obj === null) {
+      return;
+    }
 
     // Check if this object looks like a node
     if (obj.type && obj.content) {
@@ -387,7 +401,7 @@ export class KnowledgeIngestionPipeline {
 
   private async processData(
     parsedData: { nodes: any[]; relationships: any[] },
-    options: IngestionOptions
+    options: IngestionOptions,
   ): Promise<KnowledgeIngestionResult> {
     const result: KnowledgeIngestionResult = {
       success: true,
@@ -396,13 +410,13 @@ export class KnowledgeIngestionPipeline {
       relationshipsCreated: 0,
       relationshipsUpdated: 0,
       errors: [],
-      warnings: []
+      warnings: [],
     };
 
     // Process nodes in batches
     for (let i = 0; i < parsedData.nodes.length; i += options.batchSize) {
       const batch = parsedData.nodes.slice(i, i + options.batchSize);
-      
+
       for (const nodeData of batch) {
         try {
           const node = await this.createNodeFromData(nodeData, options);
@@ -414,7 +428,7 @@ export class KnowledgeIngestionPipeline {
             type: 'node_creation',
             message: error instanceof Error ? error.message : 'Unknown error',
             data: nodeData,
-            line: i + batch.indexOf(nodeData) + 1
+            line: i + batch.indexOf(nodeData) + 1,
           });
         }
       }
@@ -424,7 +438,7 @@ export class KnowledgeIngestionPipeline {
     if (options.createRelationships) {
       for (let i = 0; i < parsedData.relationships.length; i += options.batchSize) {
         const batch = parsedData.relationships.slice(i, i + options.batchSize);
-        
+
         for (const relData of batch) {
           try {
             const relationship = await this.createRelationshipFromData(relData, options);
@@ -436,7 +450,7 @@ export class KnowledgeIngestionPipeline {
               type: 'relationship_creation',
               message: error instanceof Error ? error.message : 'Unknown error',
               data: relData,
-              line: i + batch.indexOf(relData) + 1
+              line: i + batch.indexOf(relData) + 1,
             });
           }
         }
@@ -446,7 +460,10 @@ export class KnowledgeIngestionPipeline {
     return result;
   }
 
-  private async createNodeFromData(data: any, options: IngestionOptions): Promise<KnowledgeNode | null> {
+  private async createNodeFromData(
+    data: any,
+    options: IngestionOptions,
+  ): Promise<KnowledgeNode | null> {
     // Validate required fields
     if (!data.type || !data.content) {
       throw new Error('Node must have type and content');
@@ -468,9 +485,9 @@ export class KnowledgeIngestionPipeline {
         owner: 'system',
         permissions: [],
         groups: [],
-        public: true
+        public: true,
       },
-      source: options.source
+      source: options.source,
     };
 
     if (existingNode) {
@@ -480,7 +497,10 @@ export class KnowledgeIngestionPipeline {
     }
   }
 
-  private async createRelationshipFromData(data: any, options: IngestionOptions): Promise<KnowledgeRelationship | null> {
+  private async createRelationshipFromData(
+    data: any,
+    options: IngestionOptions,
+  ): Promise<KnowledgeRelationship | null> {
     // Validate required fields
     if (!data.sourceId || !data.targetId || !data.type) {
       throw new Error('Relationship must have sourceId, targetId, and type');
@@ -501,18 +521,21 @@ export class KnowledgeIngestionPipeline {
       weight: data.weight || 1.0,
       metadata: data.metadata || {
         description: data.description || '',
-        confidence: data.confidence || 1.0
-      }
+        confidence: data.confidence || 1.0,
+      },
     };
 
     return await this.database.createRelationship(relationshipData);
   }
 
-  async ingestFromFile(filePath: string, options: Partial<IngestionOptions> = {}): Promise<KnowledgeIngestionResult> {
+  async ingestFromFile(
+    filePath: string,
+    options: Partial<IngestionOptions> = {},
+  ): Promise<KnowledgeIngestionResult> {
     try {
       const fs = require('fs');
       const path = require('path');
-      
+
       if (!fs.existsSync(filePath)) {
         return {
           success: false,
@@ -520,20 +543,22 @@ export class KnowledgeIngestionPipeline {
           nodesUpdated: 0,
           relationshipsCreated: 0,
           relationshipsUpdated: 0,
-          errors: [{
-            type: 'file_not_found',
-            message: `File not found: ${filePath}`,
-            data: { filePath }
-          }],
-          warnings: []
+          errors: [
+            {
+              type: 'file_not_found',
+              message: `File not found: ${filePath}`,
+              data: { filePath },
+            },
+          ],
+          warnings: [],
         };
       }
 
       const fileContent = fs.readFileSync(filePath, 'utf8');
       const fileExtension = path.extname(filePath).toLowerCase();
-      
+
       let sourceType: 'json' | 'csv' | 'xml' | 'rdf' | 'text' = 'text';
-      
+
       switch (fileExtension) {
         case '.json':
           sourceType = 'json';
@@ -559,15 +584,14 @@ export class KnowledgeIngestionPipeline {
         metadata: {
           source: filePath,
           format: fileExtension,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       };
 
       return await this.ingest(source, {
         ...options,
-        source: filePath
+        source: filePath,
       });
-
     } catch (error) {
       return {
         success: false,
@@ -575,17 +599,22 @@ export class KnowledgeIngestionPipeline {
         nodesUpdated: 0,
         relationshipsCreated: 0,
         relationshipsUpdated: 0,
-        errors: [{
-          type: 'file_ingestion',
-          message: error instanceof Error ? error.message : 'Unknown file ingestion error',
-          data: { filePath, error }
-        }],
-        warnings: []
+        errors: [
+          {
+            type: 'file_ingestion',
+            message: error instanceof Error ? error.message : 'Unknown file ingestion error',
+            data: { filePath, error },
+          },
+        ],
+        warnings: [],
       };
     }
   }
 
-  async ingestFromAPI(apiUrl: string, options: Partial<IngestionOptions> = {}): Promise<KnowledgeIngestionResult> {
+  async ingestFromAPI(
+    apiUrl: string,
+    options: Partial<IngestionOptions> = {},
+  ): Promise<KnowledgeIngestionResult> {
     try {
       const https = require('https');
       const http = require('http');
@@ -604,11 +633,11 @@ export class KnowledgeIngestionPipeline {
             resolve({ statusCode: res.statusCode, data });
           });
         });
-        
+
         req.on('error', (error: any) => {
           reject(error);
         });
-        
+
         req.setTimeout(30000, () => {
           req.destroy();
           reject(new Error('Request timeout'));
@@ -622,12 +651,14 @@ export class KnowledgeIngestionPipeline {
           nodesUpdated: 0,
           relationshipsCreated: 0,
           relationshipsUpdated: 0,
-          errors: [{
-            type: 'api_error',
-            message: `API returned status code: ${response.statusCode}`,
-            data: { apiUrl, statusCode: response.statusCode }
-          }],
-          warnings: []
+          errors: [
+            {
+              type: 'api_error',
+              message: `API returned status code: ${response.statusCode}`,
+              data: { apiUrl, statusCode: response.statusCode },
+            },
+          ],
+          warnings: [],
         };
       }
 
@@ -641,12 +672,14 @@ export class KnowledgeIngestionPipeline {
           nodesUpdated: 0,
           relationshipsCreated: 0,
           relationshipsUpdated: 0,
-          errors: [{
-            type: 'parse_error',
-            message: 'Failed to parse API response as JSON',
-            data: { apiUrl, error: parseError }
-          }],
-          warnings: []
+          errors: [
+            {
+              type: 'parse_error',
+              message: 'Failed to parse API response as JSON',
+              data: { apiUrl, error: parseError },
+            },
+          ],
+          warnings: [],
         };
       }
 
@@ -656,15 +689,14 @@ export class KnowledgeIngestionPipeline {
         metadata: {
           source: apiUrl,
           format: 'json',
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       };
 
       return await this.ingest(source, {
         ...options,
-        source: apiUrl
+        source: apiUrl,
       });
-
     } catch (error) {
       return {
         success: false,
@@ -672,13 +704,15 @@ export class KnowledgeIngestionPipeline {
         nodesUpdated: 0,
         relationshipsCreated: 0,
         relationshipsUpdated: 0,
-        errors: [{
-          type: 'api_ingestion',
-          message: error instanceof Error ? error.message : 'Unknown API ingestion error',
-          data: { apiUrl, error }
-        }],
-        warnings: []
+        errors: [
+          {
+            type: 'api_ingestion',
+            message: error instanceof Error ? error.message : 'Unknown API ingestion error',
+            data: { apiUrl, error },
+          },
+        ],
+        warnings: [],
       };
     }
   }
-} 
+}

@@ -1,5 +1,5 @@
 // Import types for configuration
-import { KnowledgeNodeType } from './types';
+import { KnowledgeGraphConfig, KnowledgeNodeType } from './types';
 
 // Export all types and interfaces
 export * from './types';
@@ -15,7 +15,7 @@ export const defaultKnowledgeGraphConfig = {
     type: 'memory' as const,
     maxSize: 10000,
     compression: false,
-    encryption: false
+    encryption: false,
   },
   indexing: {
     enabled: true,
@@ -40,7 +40,7 @@ export const defaultKnowledgeGraphConfig = {
       KnowledgeNodeType.AGENT,
       KnowledgeNodeType.TASK,
       KnowledgeNodeType.RESULT,
-      KnowledgeNodeType.METADATA
+      KnowledgeNodeType.METADATA,
     ],
     indexFields: [
       'type',
@@ -50,30 +50,30 @@ export const defaultKnowledgeGraphConfig = {
       'metadata.domain',
       'tags',
       'confidence',
-      'source'
+      'source',
     ],
-    updateInterval: 1000
+    updateInterval: 1000,
   },
   validation: {
     enabled: true,
     strictMode: false,
     validateOnIngestion: true,
     validateOnUpdate: true,
-    customValidators: []
+    customValidators: [],
   },
   security: {
     enabled: true,
     encryption: false,
     accessControl: true,
     auditLogging: true,
-    rateLimiting: true
+    rateLimiting: true,
   },
   performance: {
     cacheSize: 1000,
     cacheTTL: 300000, // 5 minutes
     maxQueryComplexity: 100,
     timeout: 30000, // 30 seconds
-    batchSize: 100
+    batchSize: 100,
   },
   backup: {
     enabled: true,
@@ -81,36 +81,50 @@ export const defaultKnowledgeGraphConfig = {
     retention: 7, // 7 days
     compression: true,
     encryption: false,
-    location: './backups'
-  }
+    location: './backups',
+  },
 };
 
 // Main Knowledge Graph Service class
 import { KnowledgeGraphDatabase } from './database';
 import { KnowledgeValidator } from './validator';
 import { KnowledgeIngestionPipeline } from './ingestion';
-import type { KnowledgeGraphConfig } from './types';
+import { ConflictResolutionEngine } from './conflict-resolution';
+import { KnowledgeCompressionEngine } from './compression';
+import { KnowledgeVisualizationEngine } from './visualization';
+import { KnowledgeSharingEngine } from './sharing';
 
 export class KnowledgeGraphService {
   private database: KnowledgeGraphDatabase;
   private validator: KnowledgeValidator;
   private ingestionPipeline: KnowledgeIngestionPipeline;
+  private conflictEngine: ConflictResolutionEngine;
+  private compressionEngine: KnowledgeCompressionEngine;
+  private visualizationEngine: KnowledgeVisualizationEngine;
+  private sharingEngine: KnowledgeSharingEngine;
 
   constructor(config: Partial<KnowledgeGraphConfig> = {}) {
     const fullConfig = this.mergeConfig(defaultKnowledgeGraphConfig, config);
     this.database = new KnowledgeGraphDatabase(fullConfig);
     this.validator = new KnowledgeValidator(this.database);
     this.ingestionPipeline = new KnowledgeIngestionPipeline(this.database, this.validator);
+    this.conflictEngine = new ConflictResolutionEngine();
+    this.compressionEngine = new KnowledgeCompressionEngine();
+    this.visualizationEngine = new KnowledgeVisualizationEngine();
+    this.sharingEngine = new KnowledgeSharingEngine();
   }
 
-  private mergeConfig(defaultConfig: KnowledgeGraphConfig, userConfig: Partial<KnowledgeGraphConfig>): KnowledgeGraphConfig {
+  private mergeConfig(
+    defaultConfig: KnowledgeGraphConfig,
+    userConfig: Partial<KnowledgeGraphConfig>,
+  ): KnowledgeGraphConfig {
     return {
       storage: { ...defaultConfig.storage, ...userConfig.storage },
       indexing: { ...defaultConfig.indexing, ...userConfig.indexing },
       validation: { ...defaultConfig.validation, ...userConfig.validation },
       security: { ...defaultConfig.security, ...userConfig.security },
       performance: { ...defaultConfig.performance, ...userConfig.performance },
-      backup: { ...defaultConfig.backup, ...userConfig.backup }
+      backup: { ...defaultConfig.backup, ...userConfig.backup },
     };
   }
 
@@ -212,6 +226,82 @@ export class KnowledgeGraphService {
     return this.ingestionPipeline.ingestFromAPI(apiUrl, options);
   }
 
+  // Advanced Conflict Resolution
+  async detectConflicts(node1: any, node2: any) {
+    return this.conflictEngine.detectConflicts(node1, node2);
+  }
+
+  async mergeNodes(node1: any, node2: any, strategy?: string) {
+    return this.conflictEngine.mergeNodes(node1, node2, strategy);
+  }
+
+  getVersionHistory(nodeId: string) {
+    return this.conflictEngine.getVersionHistory(nodeId);
+  }
+
+  getConflictLog() {
+    return this.conflictEngine.getConflictLog();
+  }
+
+  // Compression
+  async compressNode(node: any) {
+    return this.compressionEngine.compressNode(node);
+  }
+
+  async decompressNode(compressedData: Buffer, algorithm: string) {
+    return this.compressionEngine.decompressNode(compressedData, algorithm);
+  }
+
+  async compressGraph(graph: any) {
+    return this.compressionEngine.compressGraph(graph);
+  }
+
+  getCompressionStats() {
+    return this.compressionEngine.getStats();
+  }
+
+  // Visualization
+  async generateLayout(graph: any, algorithm?: string) {
+    return this.visualizationEngine.generateLayout(graph, algorithm);
+  }
+
+  async calculateMetrics(graph: any) {
+    return this.visualizationEngine.calculateMetrics(graph);
+  }
+
+  getLayout(layoutId: string) {
+    return this.visualizationEngine.getLayout(layoutId);
+  }
+
+  // Sharing and Federation
+  async federateWithNode(nodeUrl: string, capabilities: string[] = []) {
+    return this.sharingEngine.federateWithNode(nodeUrl, capabilities);
+  }
+
+  async syncWithFederation(graph: any) {
+    return this.sharingEngine.syncWithFederation(graph);
+  }
+
+  async replicateGraph(graph: any, targetNode: string) {
+    return this.sharingEngine.replicateGraph(graph, targetNode);
+  }
+
+  async startContinuousSync(graph: any) {
+    return this.sharingEngine.startContinuousSync(graph);
+  }
+
+  async broadcastUpdate(graph: any, update: any) {
+    return this.sharingEngine.broadcastUpdate(graph, update);
+  }
+
+  getFederationNodes() {
+    return this.sharingEngine.getFederationNodes();
+  }
+
+  getSyncHistory() {
+    return this.sharingEngine.getSyncHistory();
+  }
+
   // Utility methods
   async clear() {
     return this.database.clear();
@@ -227,7 +317,9 @@ export class KnowledgeGraphService {
 }
 
 // Factory function to create a knowledge graph service
-export function createKnowledgeGraphService(config?: Partial<KnowledgeGraphConfig>): KnowledgeGraphService {
+export function createKnowledgeGraphService(
+  config?: Partial<KnowledgeGraphConfig>,
+): KnowledgeGraphService {
   return new KnowledgeGraphService(config);
 }
 
@@ -238,11 +330,7 @@ export type {
   KnowledgeQuery,
   KnowledgeSearchResult,
   KnowledgeIngestionResult,
-  KnowledgeValidationResult
+  KnowledgeValidationResult,
 } from './types';
 
-export {
-  KnowledgeNodeType,
-  RelationshipType,
-  FilterOperator
-} from './types'; 
+export { KnowledgeNodeType, RelationshipType, FilterOperator } from './types';

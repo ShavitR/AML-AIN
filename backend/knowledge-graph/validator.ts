@@ -1,21 +1,18 @@
-import {
-  KnowledgeNode,
-  KnowledgeRelationship,
-  KnowledgeValidationResult,
-  ValidationError,
-  KnowledgeNodeType,
-  RelationshipType,
-  KnowledgeGraphDatabase
-} from './types';
+import { KnowledgeNode, KnowledgeRelationship, KnowledgeNodeType, RelationshipType, ValidationError } from './types';
 
 export class KnowledgeValidator {
-  private database: KnowledgeGraphDatabase;
+  private database: any; // Changed from KnowledgeGraphDatabase to any as it's not used in the class
 
-  constructor(database: KnowledgeGraphDatabase) {
+  constructor(database: any) { // Changed from KnowledgeGraphDatabase to any
     this.database = database;
   }
 
-  async validateNode(node: Partial<KnowledgeNode>): Promise<KnowledgeValidationResult> {
+  async validateNode(node: Partial<KnowledgeNode>): Promise<{
+    valid: boolean;
+    errors: ValidationError[];
+    warnings: string[];
+    suggestions: string[];
+  }> {
     const errors: ValidationError[] = [];
     const warnings: string[] = [];
     const suggestions: string[] = [];
@@ -25,14 +22,14 @@ export class KnowledgeValidator {
       errors.push({
         type: 'missing_field',
         message: 'Node type is required',
-        field: 'type'
+        field: 'type',
       });
     } else if (!Object.values(KnowledgeNodeType).includes(node.type as KnowledgeNodeType)) {
       errors.push({
         type: 'invalid_field',
         message: `Invalid node type: ${node.type}`,
         field: 'type',
-        value: node.type
+        value: node.type,
       });
     }
 
@@ -40,7 +37,7 @@ export class KnowledgeValidator {
       errors.push({
         type: 'missing_field',
         message: 'Node content is required',
-        field: 'content'
+        field: 'content',
       });
     }
 
@@ -56,7 +53,10 @@ export class KnowledgeValidator {
 
     // Content validation based on type
     if (node.type && node.content) {
-      const contentValidation = this.validateContentByType(node.type as KnowledgeNodeType, node.content);
+      const contentValidation = this.validateContentByType(
+        node.type as KnowledgeNodeType,
+        node.content,
+      );
       errors.push(...contentValidation.errors);
       warnings.push(...contentValidation.warnings);
     }
@@ -86,11 +86,18 @@ export class KnowledgeValidator {
       valid: errors.length === 0,
       errors,
       warnings,
-      suggestions
+      suggestions,
     };
   }
 
-  async validateRelationship(relationship: Partial<KnowledgeRelationship>): Promise<KnowledgeValidationResult> {
+  async validateRelationship(
+    relationship: Partial<KnowledgeRelationship>,
+  ): Promise<{
+    valid: boolean;
+    errors: ValidationError[];
+    warnings: string[];
+    suggestions: string[];
+  }> {
     const errors: ValidationError[] = [];
     const warnings: string[] = [];
     const suggestions: string[] = [];
@@ -100,7 +107,7 @@ export class KnowledgeValidator {
       errors.push({
         type: 'missing_field',
         message: 'Source ID is required',
-        field: 'sourceId'
+        field: 'sourceId',
       });
     }
 
@@ -108,7 +115,7 @@ export class KnowledgeValidator {
       errors.push({
         type: 'missing_field',
         message: 'Target ID is required',
-        field: 'targetId'
+        field: 'targetId',
       });
     }
 
@@ -116,14 +123,14 @@ export class KnowledgeValidator {
       errors.push({
         type: 'missing_field',
         message: 'Relationship type is required',
-        field: 'type'
+        field: 'type',
       });
     } else if (!Object.values(RelationshipType).includes(relationship.type as RelationshipType)) {
       errors.push({
         type: 'invalid_field',
         message: `Invalid relationship type: ${relationship.type}`,
         field: 'type',
-        value: relationship.type
+        value: relationship.type,
       });
     }
 
@@ -137,7 +144,7 @@ export class KnowledgeValidator {
           type: 'invalid_reference',
           message: `Source node not found: ${relationship.sourceId}`,
           field: 'sourceId',
-          value: relationship.sourceId
+          value: relationship.sourceId,
         });
       }
 
@@ -146,7 +153,7 @@ export class KnowledgeValidator {
           type: 'invalid_reference',
           message: `Target node not found: ${relationship.targetId}`,
           field: 'targetId',
-          value: relationship.targetId
+          value: relationship.targetId,
         });
       }
 
@@ -156,19 +163,23 @@ export class KnowledgeValidator {
           type: 'invalid_relationship',
           message: 'Source and target cannot be the same',
           field: 'sourceId',
-          value: relationship.sourceId
+          value: relationship.sourceId,
         });
       }
     }
 
     // Weight validation
     if (relationship.weight !== undefined) {
-      if (typeof relationship.weight !== 'number' || relationship.weight < 0 || relationship.weight > 1) {
+      if (
+        typeof relationship.weight !== 'number' ||
+        relationship.weight < 0 ||
+        relationship.weight > 1
+      ) {
         errors.push({
           type: 'invalid_field',
           message: 'Weight must be a number between 0 and 1',
           field: 'weight',
-          value: relationship.weight
+          value: relationship.weight,
         });
       }
     }
@@ -184,11 +195,19 @@ export class KnowledgeValidator {
       valid: errors.length === 0,
       errors,
       warnings,
-      suggestions
+      suggestions,
     };
   }
 
-  async validateIngestionData(data: { nodes: any[]; relationships: any[] }): Promise<KnowledgeValidationResult> {
+  async validateIngestionData(data: {
+    nodes: any[];
+    relationships: any[];
+  }): Promise<{
+    valid: boolean;
+    errors: ValidationError[];
+    warnings: string[];
+    suggestions: string[];
+  }> {
     const errors: ValidationError[] = [];
     const warnings: string[] = [];
     const suggestions: string[] = [];
@@ -197,15 +216,15 @@ export class KnowledgeValidator {
     for (let i = 0; i < data.nodes.length; i++) {
       const node = data.nodes[i];
       const nodeValidation = await this.validateNode(node);
-      
-      nodeValidation.errors.forEach(error => {
+
+      nodeValidation.errors.forEach((error) => {
         errors.push({
           ...error,
           nodeId: node.id,
-          line: i + 1
+          line: i + 1,
         });
       });
-      
+
       warnings.push(...nodeValidation.warnings);
       suggestions.push(...nodeValidation.suggestions);
     }
@@ -214,15 +233,15 @@ export class KnowledgeValidator {
     for (let i = 0; i < data.relationships.length; i++) {
       const relationship = data.relationships[i];
       const relationshipValidation = await this.validateRelationship(relationship);
-      
-      relationshipValidation.errors.forEach(error => {
+
+      relationshipValidation.errors.forEach((error) => {
         errors.push({
           ...error,
           relationshipId: relationship.id,
-          line: i + 1
+          line: i + 1,
         });
       });
-      
+
       warnings.push(...relationshipValidation.warnings);
       suggestions.push(...relationshipValidation.suggestions);
     }
@@ -238,7 +257,7 @@ export class KnowledgeValidator {
             type: 'duplicate_id',
             message: `Duplicate node ID: ${node.id}`,
             nodeId: node.id,
-            line: index + 1
+            line: index + 1,
           });
         } else {
           nodeIds.add(node.id);
@@ -253,7 +272,7 @@ export class KnowledgeValidator {
             type: 'duplicate_id',
             message: `Duplicate relationship ID: ${relationship.id}`,
             relationshipId: relationship.id,
-            line: index + 1
+            line: index + 1,
           });
         } else {
           relationshipIds.add(relationship.id);
@@ -265,11 +284,14 @@ export class KnowledgeValidator {
       valid: errors.length === 0,
       errors,
       warnings,
-      suggestions
+      suggestions,
     };
   }
 
-  private validateContentByType(type: KnowledgeNodeType, content: any): { errors: ValidationError[]; warnings: string[] } {
+  private validateContentByType(
+    type: KnowledgeNodeType,
+    content: any,
+  ): { errors: ValidationError[]; warnings: string[] } {
     const errors: ValidationError[] = [];
     const warnings: string[] = [];
 
@@ -280,7 +302,7 @@ export class KnowledgeValidator {
             type: 'invalid_content',
             message: 'Code content must be a string',
             field: 'content',
-            value: typeof content
+            value: typeof content,
           });
         }
         break;
@@ -293,7 +315,7 @@ export class KnowledgeValidator {
             type: 'invalid_content',
             message: `${type} content must be a string (URL) or object (binary data)`,
             field: 'content',
-            value: typeof content
+            value: typeof content,
           });
         }
         break;
@@ -304,7 +326,7 @@ export class KnowledgeValidator {
             type: 'invalid_content',
             message: 'Dataset content must be an array or object',
             field: 'content',
-            value: typeof content
+            value: typeof content,
           });
         }
         break;
@@ -315,7 +337,7 @@ export class KnowledgeValidator {
             type: 'invalid_content',
             message: 'Model content must be an object',
             field: 'content',
-            value: typeof content
+            value: typeof content,
           });
         }
         break;
@@ -337,7 +359,7 @@ export class KnowledgeValidator {
         type: 'invalid_field',
         message: 'Metadata must be an object',
         field: 'metadata',
-        value: typeof metadata
+        value: typeof metadata,
       });
       return { errors, warnings };
     }
@@ -348,7 +370,7 @@ export class KnowledgeValidator {
         type: 'invalid_field',
         message: 'Title must be a string',
         field: 'metadata.title',
-        value: typeof metadata.title
+        value: typeof metadata.title,
       });
     }
 
@@ -358,7 +380,7 @@ export class KnowledgeValidator {
         type: 'invalid_field',
         message: 'Description must be a string',
         field: 'metadata.description',
-        value: typeof metadata.description
+        value: typeof metadata.description,
       });
     }
 
@@ -368,7 +390,7 @@ export class KnowledgeValidator {
         type: 'invalid_field',
         message: 'Author must be a string',
         field: 'metadata.author',
-        value: typeof metadata.author
+        value: typeof metadata.author,
       });
     }
 
@@ -379,7 +401,7 @@ export class KnowledgeValidator {
           type: 'invalid_field',
           message: 'Dependencies must be an array',
           field: 'metadata.dependencies',
-          value: typeof metadata.dependencies
+          value: typeof metadata.dependencies,
         });
       } else {
         metadata.dependencies.forEach((dep: any, index: number) => {
@@ -388,7 +410,7 @@ export class KnowledgeValidator {
               type: 'invalid_field',
               message: `Dependency at index ${index} must be a string`,
               field: `metadata.dependencies[${index}]`,
-              value: typeof dep
+              value: typeof dep,
             });
           }
         });
@@ -398,7 +420,10 @@ export class KnowledgeValidator {
     return { errors, warnings };
   }
 
-  private validateAccessControl(accessControl: any): { errors: ValidationError[]; warnings: string[] } {
+  private validateAccessControl(accessControl: any): {
+    errors: ValidationError[];
+    warnings: string[];
+  } {
     const errors: ValidationError[] = [];
     const warnings: string[] = [];
 
@@ -407,7 +432,7 @@ export class KnowledgeValidator {
         type: 'invalid_field',
         message: 'Access control must be an object',
         field: 'accessControl',
-        value: typeof accessControl
+        value: typeof accessControl,
       });
       return { errors, warnings };
     }
@@ -417,7 +442,7 @@ export class KnowledgeValidator {
       errors.push({
         type: 'missing_field',
         message: 'Owner is required and must be a string',
-        field: 'accessControl.owner'
+        field: 'accessControl.owner',
       });
     }
 
@@ -428,7 +453,7 @@ export class KnowledgeValidator {
           type: 'invalid_field',
           message: 'Permissions must be an array',
           field: 'accessControl.permissions',
-          value: typeof accessControl.permissions
+          value: typeof accessControl.permissions,
         });
       } else {
         accessControl.permissions.forEach((perm: any, index: number) => {
@@ -436,7 +461,7 @@ export class KnowledgeValidator {
             errors.push({
               type: 'invalid_field',
               message: `Permission at index ${index} must have subject and actions`,
-              field: `accessControl.permissions[${index}]`
+              field: `accessControl.permissions[${index}]`,
             });
           }
         });
@@ -450,7 +475,7 @@ export class KnowledgeValidator {
           type: 'invalid_field',
           message: 'Groups must be an array',
           field: 'accessControl.groups',
-          value: typeof accessControl.groups
+          value: typeof accessControl.groups,
         });
       } else {
         accessControl.groups.forEach((group: any, index: number) => {
@@ -459,7 +484,7 @@ export class KnowledgeValidator {
               type: 'invalid_field',
               message: `Group at index ${index} must be a string`,
               field: `accessControl.groups[${index}]`,
-              value: typeof group
+              value: typeof group,
             });
           }
         });
@@ -472,7 +497,7 @@ export class KnowledgeValidator {
         type: 'invalid_field',
         message: 'Public flag must be a boolean',
         field: 'accessControl.public',
-        value: typeof accessControl.public
+        value: typeof accessControl.public,
       });
     }
 
@@ -488,21 +513,28 @@ export class KnowledgeValidator {
         type: 'invalid_field',
         message: 'Quality metrics must be an object',
         field: 'metadata.quality',
-        value: typeof quality
+        value: typeof quality,
       });
       return { errors, warnings };
     }
 
-    const metrics = ['accuracy', 'completeness', 'consistency', 'timeliness', 'relevance', 'overall'];
-    
-    metrics.forEach(metric => {
+    const metrics = [
+      'accuracy',
+      'completeness',
+      'consistency',
+      'timeliness',
+      'relevance',
+      'overall',
+    ];
+
+    metrics.forEach((metric) => {
       if (quality[metric] !== undefined) {
         if (typeof quality[metric] !== 'number' || quality[metric] < 0 || quality[metric] > 1) {
           errors.push({
             type: 'invalid_field',
             message: `${metric} must be a number between 0 and 1`,
             field: `metadata.quality.${metric}`,
-            value: quality[metric]
+            value: quality[metric],
           });
         }
       }
@@ -511,7 +543,10 @@ export class KnowledgeValidator {
     return { errors, warnings };
   }
 
-  private validateRelationshipMetadata(metadata: any): { errors: ValidationError[]; warnings: string[] } {
+  private validateRelationshipMetadata(metadata: any): {
+    errors: ValidationError[];
+    warnings: string[];
+  } {
     const errors: ValidationError[] = [];
     const warnings: string[] = [];
 
@@ -520,7 +555,7 @@ export class KnowledgeValidator {
         type: 'invalid_field',
         message: 'Relationship metadata must be an object',
         field: 'metadata',
-        value: typeof metadata
+        value: typeof metadata,
       });
       return { errors, warnings };
     }
@@ -531,18 +566,22 @@ export class KnowledgeValidator {
         type: 'invalid_field',
         message: 'Description must be a string',
         field: 'metadata.description',
-        value: typeof metadata.description
+        value: typeof metadata.description,
       });
     }
 
     // Validate confidence
     if (metadata.confidence !== undefined) {
-      if (typeof metadata.confidence !== 'number' || metadata.confidence < 0 || metadata.confidence > 1) {
+      if (
+        typeof metadata.confidence !== 'number' ||
+        metadata.confidence < 0 ||
+        metadata.confidence > 1
+      ) {
         errors.push({
           type: 'invalid_field',
           message: 'Confidence must be a number between 0 and 1',
           field: 'metadata.confidence',
-          value: metadata.confidence
+          value: metadata.confidence,
         });
       }
     }
@@ -554,7 +593,7 @@ export class KnowledgeValidator {
           type: 'invalid_field',
           message: 'Evidence must be an array',
           field: 'metadata.evidence',
-          value: typeof metadata.evidence
+          value: typeof metadata.evidence,
         });
       } else {
         metadata.evidence.forEach((item: any, index: number) => {
@@ -563,7 +602,7 @@ export class KnowledgeValidator {
               type: 'invalid_field',
               message: `Evidence at index ${index} must be a string`,
               field: `metadata.evidence[${index}]`,
-              value: typeof item
+              value: typeof item,
             });
           }
         });
@@ -572,4 +611,4 @@ export class KnowledgeValidator {
 
     return { errors, warnings };
   }
-} 
+}

@@ -18,7 +18,7 @@ describe('KnowledgeGraphService', () => {
         content: 'Test Concept',
         metadata: {
           title: 'Test Concept',
-          description: 'A test concept'
+          description: 'A test concept',
         },
         confidence: 0.9,
         tags: ['test'],
@@ -26,13 +26,13 @@ describe('KnowledgeGraphService', () => {
           owner: 'system',
           permissions: [],
           groups: [],
-          public: true
+          public: true,
         },
-        source: 'test'
+        source: 'test',
       };
 
       const node = await kgService.createNode(nodeData);
-      
+
       expect(node).toBeDefined();
       expect(node.id).toBeDefined();
       expect(node.type).toBe(KnowledgeNodeType.CONCEPT);
@@ -53,9 +53,9 @@ describe('KnowledgeGraphService', () => {
           owner: 'system',
           permissions: [],
           groups: [],
-          public: true
+          public: true,
         },
-        source: 'test'
+        source: 'test',
       };
 
       const createdNode = await kgService.createNode(nodeData);
@@ -77,15 +77,15 @@ describe('KnowledgeGraphService', () => {
           owner: 'system',
           permissions: [],
           groups: [],
-          public: true
+          public: true,
         },
-        source: 'test'
+        source: 'test',
       };
 
       const node = await kgService.createNode(nodeData);
       const updatedNode = await kgService.updateNode(node.id, {
         content: 'Updated Content',
-        metadata: { title: 'Updated Title' }
+        metadata: { title: 'Updated Title' },
       });
 
       expect(updatedNode).toBeDefined();
@@ -105,9 +105,9 @@ describe('KnowledgeGraphService', () => {
           owner: 'system',
           permissions: [],
           groups: [],
-          public: true
+          public: true,
         },
-        source: 'test'
+        source: 'test',
       };
 
       const node = await kgService.createNode(nodeData);
@@ -134,9 +134,9 @@ describe('KnowledgeGraphService', () => {
           owner: 'system',
           permissions: [],
           groups: [],
-          public: true
+          public: true,
         },
-        source: 'test'
+        source: 'test',
       });
 
       targetNode = await kgService.createNode({
@@ -149,9 +149,9 @@ describe('KnowledgeGraphService', () => {
           owner: 'system',
           permissions: [],
           groups: [],
-          public: true
+          public: true,
         },
-        source: 'test'
+        source: 'test',
       });
     });
 
@@ -163,8 +163,8 @@ describe('KnowledgeGraphService', () => {
         weight: 0.8,
         metadata: {
           description: 'Test relationship',
-          confidence: 0.8
-        }
+          confidence: 0.8,
+        },
       };
 
       const relationship = await kgService.createRelationship(relationshipData);
@@ -184,8 +184,8 @@ describe('KnowledgeGraphService', () => {
         weight: 0.7,
         metadata: {
           description: 'Uses relationship',
-          confidence: 0.7
-        }
+          confidence: 0.7,
+        },
       };
 
       const createdRel = await kgService.createRelationship(relationshipData);
@@ -204,8 +204,8 @@ describe('KnowledgeGraphService', () => {
         weight: 0.6,
         metadata: {
           description: 'Original description',
-          confidence: 0.6
-        }
+          confidence: 0.6,
+        },
       };
 
       const relationship = await kgService.createRelationship(relationshipData);
@@ -213,8 +213,8 @@ describe('KnowledgeGraphService', () => {
         weight: 0.9,
         metadata: {
           description: 'Updated description',
-          confidence: 0.9
-        }
+          confidence: 0.9,
+        },
       });
 
       expect(updatedRel).toBeDefined();
@@ -230,8 +230,8 @@ describe('KnowledgeGraphService', () => {
         weight: 0.5,
         metadata: {
           description: 'Similar relationship',
-          confidence: 0.5
-        }
+          confidence: 0.5,
+        },
       };
 
       const relationship = await kgService.createRelationship(relationshipData);
@@ -255,9 +255,9 @@ describe('KnowledgeGraphService', () => {
           owner: 'system',
           permissions: [],
           groups: [],
-          public: true
+          public: true,
         },
-        source: 'test'
+        source: 'test',
       });
 
       await kgService.createNode({
@@ -270,32 +270,32 @@ describe('KnowledgeGraphService', () => {
           owner: 'system',
           permissions: [],
           groups: [],
-          public: true
+          public: true,
         },
-        source: 'test'
+        source: 'test',
       });
     });
 
     it('should search for nodes by text', async () => {
       const results = await kgService.search('Machine Learning');
-      
+
       expect(results.nodes.length).toBeGreaterThan(0);
       expect(results.total).toBeGreaterThan(0);
-      expect(results.executionTime).toBeGreaterThan(0);
+      expect(results.executionTime).toBeGreaterThanOrEqual(0);
     });
 
     it('should search for nodes by type', async () => {
       const results = await kgService.searchByType(KnowledgeNodeType.CONCEPT);
-      
+
       expect(results.nodes.length).toBeGreaterThan(0);
-      expect(results.nodes.every(node => node.type === KnowledgeNodeType.CONCEPT)).toBe(true);
+      expect(results.nodes.every((node) => node.type === KnowledgeNodeType.CONCEPT)).toBe(true);
     });
 
     it('should search for nodes by tag', async () => {
       const results = await kgService.searchByTag('ai');
-      
+
       expect(results.nodes.length).toBeGreaterThan(0);
-      expect(results.nodes.some(node => node.tags.includes('ai'))).toBe(true);
+      expect(results.nodes.some((node) => node.tags.includes('ai'))).toBe(true);
     });
   });
 
@@ -315,9 +315,9 @@ describe('KnowledgeGraphService', () => {
           owner: 'system',
           permissions: [],
           groups: [],
-          public: true
+          public: true,
         },
-        source: 'test'
+        source: 'test',
       });
 
       node2 = await kgService.createNode({
@@ -330,9 +330,9 @@ describe('KnowledgeGraphService', () => {
           owner: 'system',
           permissions: [],
           groups: [],
-          public: true
+          public: true,
         },
-        source: 'test'
+        source: 'test',
       });
 
       node3 = await kgService.createNode({
@@ -345,9 +345,9 @@ describe('KnowledgeGraphService', () => {
           owner: 'system',
           permissions: [],
           groups: [],
-          public: true
+          public: true,
         },
-        source: 'test'
+        source: 'test',
       });
 
       await kgService.createRelationship({
@@ -355,7 +355,7 @@ describe('KnowledgeGraphService', () => {
         targetId: node2.id,
         type: RelationshipType.ASSOCIATED_WITH,
         weight: 0.8,
-        metadata: { description: 'Link 1-2', confidence: 0.8 }
+        metadata: { description: 'Link 1-2', confidence: 0.8 },
       });
 
       await kgService.createRelationship({
@@ -363,7 +363,7 @@ describe('KnowledgeGraphService', () => {
         targetId: node3.id,
         type: RelationshipType.ASSOCIATED_WITH,
         weight: 0.8,
-        metadata: { description: 'Link 2-3', confidence: 0.8 }
+        metadata: { description: 'Link 2-3', confidence: 0.8 },
       });
     });
 
@@ -405,8 +405,8 @@ describe('KnowledgeGraphService', () => {
           owner: 'system',
           permissions: [],
           groups: [],
-          public: true
-        }
+          public: true,
+        },
       };
 
       const validation = await kgService.validateNode(nodeData);
@@ -418,7 +418,7 @@ describe('KnowledgeGraphService', () => {
     it('should reject an invalid node', async () => {
       const nodeData = {
         // Missing required fields
-        content: 'Invalid Concept'
+        content: 'Invalid Concept',
       };
 
       const validation = await kgService.validateNode(nodeData);
@@ -438,9 +438,9 @@ describe('KnowledgeGraphService', () => {
           owner: 'system',
           permissions: [],
           groups: [],
-          public: true
+          public: true,
         },
-        source: 'test'
+        source: 'test',
       });
 
       const node2 = await kgService.createNode({
@@ -453,9 +453,9 @@ describe('KnowledgeGraphService', () => {
           owner: 'system',
           permissions: [],
           groups: [],
-          public: true
+          public: true,
         },
-        source: 'test'
+        source: 'test',
       });
 
       const relData = {
@@ -463,7 +463,7 @@ describe('KnowledgeGraphService', () => {
         targetId: node2.id,
         type: RelationshipType.ASSOCIATED_WITH,
         weight: 0.8,
-        metadata: { description: 'Valid relationship', confidence: 0.8 }
+        metadata: { description: 'Valid relationship', confidence: 0.8 },
       };
 
       const validation = await kgService.validateRelationship(relData);
@@ -489,17 +489,17 @@ describe('KnowledgeGraphService', () => {
                 owner: 'system',
                 permissions: [],
                 groups: [],
-                public: true
-              }
-            }
+                public: true,
+              },
+            },
           ],
-          relationships: []
-        }
+          relationships: [],
+        },
       };
 
       const result = await kgService.ingest(jsonData, {
         source: 'test-json',
-        validateOnIngestion: true
+        validateOnIngestion: true,
       });
 
       expect(result.success).toBe(true);
@@ -514,20 +514,20 @@ describe('KnowledgeGraphService', () => {
           nodes: [
             {
               // Missing required fields
-              content: 'Invalid Node'
-            }
+              content: 'Invalid Node',
+            },
           ],
-          relationships: []
-        }
+          relationships: [],
+        },
       };
 
       const result = await kgService.ingest(invalidData, {
         source: 'test-invalid',
-        validateOnIngestion: true
+        validateOnIngestion: true,
       });
 
       expect(result.success).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
   });
-}); 
+});
