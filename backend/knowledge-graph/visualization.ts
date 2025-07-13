@@ -103,7 +103,7 @@ export class KnowledgeVisualizationEngine {
   }
 
   async generateLayout(graph: KnowledgeGraph, algorithm?: string): Promise<GraphLayout> {
-    const startTime = Date.now();
+    // const startTime = Date.now();
     const layoutAlgorithm = algorithm || this.config.algorithm;
 
     let layout: GraphLayout;
@@ -147,14 +147,17 @@ export class KnowledgeVisualizationEngine {
     const nodeIds = nodes.map((n) => n.id);
 
     for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+      if (!node) continue;
+      
       const angle = (2 * Math.PI * i) / nodes.length;
       const radius = Math.random() * 200 + 50;
-      nodePositions.set(nodes[i].id, {
-        id: nodes[i].id,
+      nodePositions.set(node.id, {
+        id: node.id,
         x: Math.cos(angle) * radius + this.config.width / 2,
         y: Math.sin(angle) * radius + this.config.height / 2,
         radius: this.config.nodeSize,
-        color: this.getNodeColor(nodes[i]),
+        color: this.getNodeColor(node),
         opacity: 0.8,
       });
     }
@@ -170,12 +173,19 @@ export class KnowledgeVisualizationEngine {
 
       // Calculate repulsive forces between all nodes
       for (let i = 0; i < nodes.length; i++) {
+        const node1 = nodes[i];
+        if (!node1) continue;
+        
         for (let j = i + 1; j < nodes.length; j++) {
-          const node1 = nodePositions.get(nodes[i].id)!;
-          const node2 = nodePositions.get(nodes[j].id)!;
+          const node2 = nodes[j];
+          if (!node2) continue;
+          
+          const pos1 = nodePositions.get(node1.id);
+          const pos2 = nodePositions.get(node2.id);
+          if (!pos1 || !pos2) continue;
 
-          const dx = node2.x - node1.x;
-          const dy = node2.y - node1.y;
+          const dx = pos2.x - pos1.x;
+          const dy = pos2.y - pos1.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
 
           if (distance > 0) {
@@ -183,10 +193,14 @@ export class KnowledgeVisualizationEngine {
             const fx = (dx / distance) * force;
             const fy = (dy / distance) * force;
 
-            forces.get(nodes[i].id)!.x -= fx;
-            forces.get(nodes[i].id)!.y -= fy;
-            forces.get(nodes[j].id)!.x += fx;
-            forces.get(nodes[j].id)!.y += fy;
+            const force1 = forces.get(node1.id);
+            const force2 = forces.get(node2.id);
+            if (force1 && force2) {
+              force1.x -= fx;
+              force1.y -= fy;
+              force2.x += fx;
+              force2.y += fy;
+            }
           }
         }
       }
@@ -324,7 +338,8 @@ export class KnowledgeVisualizationEngine {
 
     // Simple hierarchical layout - arrange nodes in levels
     const levels = this.calculateHierarchyLevels(nodes, relationships);
-    const levelHeight = this.config.height / (levels.length + 1);
+    const levelArray = Array.from(levels.values());
+    const levelHeight = this.config.height / (levelArray.length + 1);
 
     const nodePositions = nodes.map((node) => {
       const level = levels.get(node.id) || 0;
@@ -533,7 +548,8 @@ export class KnowledgeVisualizationEngine {
     ];
 
     const typeIndex = Object.values(node.type).indexOf(node.type);
-    return colors[typeIndex % colors.length];
+    const color = colors[typeIndex % colors.length];
+    return color || '#CCCCCC'; // fallback color
   }
 
   private getEdgeColor(relationship: KnowledgeRelationship): string {
@@ -554,7 +570,7 @@ export class KnowledgeVisualizationEngine {
     const density = nodeCount > 1 ? edgeCount / (nodeCount * (nodeCount - 1)) : 0;
 
     // Calculate average degree
-    const degreeSum = relationships.reduce((sum, rel) => {
+    const degreeSum = relationships.reduce((sum, _rel) => {
       return sum + 2; // Each relationship contributes to degree of both nodes
     }, 0);
     const averageDegree = nodeCount > 0 ? degreeSum / nodeCount : 0;
@@ -602,8 +618,8 @@ export class KnowledgeVisualizationEngine {
       const paths = this.findAllShortestPaths(node.id, nodes, relationships);
       let betweennessScore = 0;
 
-      for (const [source, targets] of paths) {
-        for (const [target, path] of targets) {
+      for (const [_source, targets] of paths) {
+        for (const [_target, path] of targets) {
           if (path.length > 2) {
             // Path goes through other nodes
             const intermediateNodes = path.slice(1, -1);
@@ -710,7 +726,7 @@ export class KnowledgeVisualizationEngine {
 
   private calculateDistances(
     sourceId: string,
-    nodes: KnowledgeNode[],
+    _nodes: KnowledgeNode[],
     relationships: KnowledgeRelationship[],
   ): Map<string, number> {
     const distances = new Map<string, number>();

@@ -11,7 +11,7 @@ import type {
   KnowledgeGraphConfig
 } from './types';
 import {
-  RelationshipType,
+
   FilterOperator
 } from './types';
 
@@ -546,6 +546,7 @@ export class KnowledgeGraphDatabase {
 
     const relationships = Array.from(this.relationships.values()).filter(
       (rel) => rel.sourceId === nodeId || rel.targetId === nodeId,
+    );
 
     for (const rel of relationships) {
       const nextId = rel.sourceId === nodeId ? rel.targetId : rel.sourceId;

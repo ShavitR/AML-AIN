@@ -293,6 +293,7 @@ module.exports = {
   selectAgents,
   scheduleTasks,
   assignTaskToAgent,
+  completeTask,
   monitor,
   handleFailures,
   collectMetrics,

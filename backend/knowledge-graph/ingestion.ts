@@ -1,10 +1,7 @@
 import type { KnowledgeNode, KnowledgeRelationship, KnowledgeIngestionResult } from './types';
 import {
-  IngestionError,
   KnowledgeNodeType,
   RelationshipType,
-  KnowledgeValidationResult,
-  ValidationError,
 } from './types';
 import type { KnowledgeGraphDatabase } from './database';
 import type { KnowledgeValidator } from './validator';
@@ -226,12 +223,14 @@ export class KnowledgeIngestionPipeline {
 
     // Extract attributes
     const attrMatches = xml.match(new RegExp(`<${tag}\\s+([^>]*)>`));
-    if (attrMatches) {
+    if (attrMatches && attrMatches[1]) {
       const attrString = attrMatches[1];
       const attrRegex = /(\w+)="([^"]*)"/g;
       let match;
       while ((match = attrRegex.exec(attrString)) !== null) {
-        attributes[match[1]] = match[2];
+        if (match[1] && match[2]) {
+          attributes[match[1]] = match[2];
+        }
       }
     }
 
@@ -240,7 +239,7 @@ export class KnowledgeIngestionPipeline {
 
   private async parseRDF(data: string): Promise<{ nodes: any[]; relationships: any[] }> {
     // Simple RDF parsing - in production, use a proper RDF parser
-    const nodes: any[] = [];
+    // const nodes: any[] = [];
     const relationships: any[] = [];
     const subjects = new Map<string, any>();
 
@@ -269,13 +268,16 @@ export class KnowledgeIngestionPipeline {
             }
           } else {
             // This is a relationship
-            relationships.push({
-              sourceId: subject,
-              targetId: object.replace(/[<>]/g, ''),
-              type: RelationshipType.ASSOCIATED_WITH,
-              weight: 1.0,
-              metadata: { description: predicate },
-            });
+            const targetId = object.replace(/[<>]/g, '');
+            if (subjects.has(targetId)) {
+              relationships.push({
+                sourceId: subject,
+                targetId,
+                type: RelationshipType.ASSOCIATED_WITH,
+                weight: 1.0,
+                metadata: { description: predicate },
+              });
+            }
           }
         }
       }
@@ -330,7 +332,7 @@ export class KnowledgeIngestionPipeline {
       let match;
       while ((match = pattern.exec(data)) !== null) {
         const [, source, target] = match;
-        if (concepts.has(source) && concepts.has(target)) {
+        if (source && target && concepts.has(source) && concepts.has(target)) {
           relationships.push({
             sourceId: source,
             targetId: target,
@@ -462,7 +464,7 @@ export class KnowledgeIngestionPipeline {
 
   private async createNodeFromData(
     data: any,
-    options: IngestionOptions,
+    _options: IngestionOptions,
   ): Promise<KnowledgeNode | null> {
     // Validate required fields
     if (!data.type || !data.content) {
@@ -471,7 +473,7 @@ export class KnowledgeIngestionPipeline {
 
     // Check if node already exists (if updateExisting is true)
     let existingNode: KnowledgeNode | null = null;
-    if (options.updateExisting && data.id) {
+    if (_options.updateExisting && data.id) {
       existingNode = await this.database.getNode(data.id);
     }
 
@@ -487,7 +489,7 @@ export class KnowledgeIngestionPipeline {
         groups: [],
         public: true,
       },
-      source: options.source,
+      source: _options.source,
     };
 
     if (existingNode) {

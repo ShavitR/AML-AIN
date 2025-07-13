@@ -1,5 +1,4 @@
 import { KnowledgeGraph } from './types';
-import { KnowledgeNode, KnowledgeRelationship } from './types';
 
 export interface SharingConfig {
   protocol: 'federation' | 'sync' | 'replication' | 'gossip';
@@ -54,7 +53,13 @@ export class KnowledgeSharingEngine {
   private config: SharingConfig;
   private federationNodes: Map<string, FederationNode> = new Map();
   private syncHistory: SyncMessage[] = [];
-  private replicationConfig: ReplicationConfig;
+  private replicationConfig: ReplicationConfig = {
+    strategy: 'incremental',
+    filter: [],
+    schedule: 'periodic',
+    interval: 600000, // 10 minutes
+    batchSize: 100,
+  };
   private lastSync: Map<string, Date> = new Map();
 
   constructor(config: Partial<SharingConfig> = {}) {
@@ -71,13 +76,7 @@ export class KnowledgeSharingEngine {
       ...config,
     };
 
-    this.replicationConfig = {
-      strategy: 'incremental',
-      filter: [],
-      schedule: 'periodic',
-      interval: 600000, // 10 minutes
-      batchSize: 100,
-    };
+
   }
 
   async federateWithNode(nodeUrl: string, capabilities: string[] = []): Promise<boolean> {
@@ -266,7 +265,7 @@ export class KnowledgeSharingEngine {
     }
   }
 
-  private async testConnection(nodeUrl: string): Promise<any> {
+  private async testConnection(_nodeUrl: string): Promise<any> {
     // Simulate connection test
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -283,7 +282,7 @@ export class KnowledgeSharingEngine {
     });
   }
 
-  private async sendMessage(url: string, message: SyncMessage): Promise<SyncMessage> {
+  private async sendMessage(_url: string, message: SyncMessage): Promise<SyncMessage> {
     // Simulate network communication
     return new Promise((resolve, reject) => {
       setTimeout(() => {
@@ -308,7 +307,7 @@ export class KnowledgeSharingEngine {
     });
   }
 
-  private async sendReplicationData(targetNode: string, data: any): Promise<boolean> {
+  private async sendReplicationData(_targetNode: string, _data: any): Promise<boolean> {
     // Simulate replication
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -362,7 +361,7 @@ export class KnowledgeSharingEngine {
     return changes;
   }
 
-  private async resolveConflicts(graph: KnowledgeGraph, conflicts: any[]): Promise<any[]> {
+  private async resolveConflicts(_graph: KnowledgeGraph, conflicts: any[]): Promise<any[]> {
     const resolved: any[] = [];
 
     for (const conflict of conflicts) {

@@ -1,5 +1,4 @@
 import { KnowledgeNode } from './types';
-import { KnowledgeRelationship, KnowledgeValidationResult, ValidationError } from './types';
 
 export interface ConflictInfo {
   type: 'node' | 'relationship';
@@ -216,7 +215,7 @@ export class ConflictResolutionEngine {
   private performMerge(
     node1: KnowledgeNode,
     node2: KnowledgeNode,
-    strategy?: string,
+    _strategy?: string,
   ): KnowledgeNode {
     const nodeType = node1.type;
     const mergeStrategy =
@@ -273,7 +272,7 @@ export class ConflictResolutionEngine {
   private autoResolveConflict(
     node1: KnowledgeNode,
     node2: KnowledgeNode,
-    conflict: ConflictInfo,
+    _conflict: ConflictInfo,
   ): KnowledgeNode {
     // Simple auto-resolution: keep the more recent version
     return node1.updatedAt > node2.updatedAt ? node1 : node2;
