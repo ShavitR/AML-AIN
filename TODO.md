@@ -1,5 +1,41 @@
 # AML-AIN Development TODO List
 
+## Development Approach: Skeleton First, Then Vertical Slices
+
+- First, build a minimal end-to-end skeleton connecting all major modules.
+- Then, implement features as vertical slices, each cutting through all layers (UI, API, backend, DB, etc.).
+- This ensures early integration, fast feedback, and incremental delivery of real value.
+
+## Vertical Slices Roadmap
+
+### 1. Agent Registration
+- [ ] Frontend: Add agent registration form and submit button
+- [ ] Backend: Create /api/agents/register endpoint
+- [ ] DB: Store agent info in database
+- [ ] Communication: Send registration message to agent
+- [ ] Agent: Implement stub handler for registration
+- [ ] Test: End-to-end test for agent registration
+
+### 2. Job Submission & Status
+- [ ] Frontend: Add job submission form and job status view
+- [ ] Backend: Create /api/jobs/submit and /api/jobs/status endpoints
+- [ ] DB: Store job/task info in database
+- [ ] Orchestrator: Implement job submission and status logic
+- [ ] Communication: Dispatch job to agent
+- [ ] Agent: Implement stub handler for job
+- [ ] Test: End-to-end test for job submission and status
+
+### 3. Knowledge Graph Query
+- [ ] Frontend: Add query/search box and results display
+- [ ] Backend: Create /api/knowledge/query endpoint
+- [ ] Knowledge Graph: Implement query logic (mock or real)
+- [ ] DB: Query knowledge graph
+- [ ] Test: End-to-end test for knowledge graph query
+
+---
+
+## Legacy Module-by-Module Tasks (for reference)
+
 ## Phase 1: Foundation & Core Infrastructure (Months 1-3)
 
 ### 1.1 Project Setup & Environment ✅ COMPLETED
@@ -301,22 +337,22 @@
 
 ## Phase 2: Agent Development (Months 2-4)
 
-### 2.1 Core Agent Framework 🔄 IN PROGRESS
+### 2.1 Core Agent Framework ✅ COMPLETED (except marketplace integration)
 
-- [ ] Design agent base class and interfaces
-- [ ] Implement agent lifecycle hooks
-- [ ] Create agent configuration system
-- [ ] Build agent state management
-- [ ] Implement agent error handling
-- [ ] Create agent logging and debugging
-- [ ] Build agent performance monitoring
-- [ ] Implement agent security features
-- [ ] Create agent testing framework
-- [ ] Build agent deployment automation
-- [ ] Implement agent versioning system
-- [ ] Create agent documentation generator
-- [ ] Build agent validation tools
-- [ ] Implement agent optimization engine
+- [x] Design agent base class and interfaces
+- [x] Implement agent lifecycle hooks
+- [x] Create agent configuration system
+- [x] Build agent state management
+- [x] Implement agent error handling
+- [x] Create agent logging and debugging
+- [x] Build agent performance monitoring
+- [x] Implement agent security features
+- [x] Create agent testing framework
+- [x] Build agent deployment automation
+- [x] Implement agent versioning system
+- [x] Create agent documentation generator
+- [x] Build agent validation tools
+- [x] Implement agent optimization engine
 - [ ] Create agent marketplace integration
 
 ### 2.2 Programming Domain Agents ⏳ PENDING
